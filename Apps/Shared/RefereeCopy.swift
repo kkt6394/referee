@@ -131,6 +131,260 @@ struct RefereeCopy: Sendable {
     func savedLocally(queue count: Int) -> String { text("로컬 저장 · 대기 \(count)", "Saved locally · Queue \(count)") }
     var retryPhoneSync: String { text("iPhone 동기화 다시 시도", "Retry iPhone sync") }
 
+    // Timeline and follow-up editors
+    var noEventsYet: String { text("아직 경기 기록이 없습니다", "No events yet") }
+    var timelineEmptyGuidance: String { text("경기 액션이 여기에 표시됩니다.", "Match actions will appear here.") }
+    var pitch: String { text("구장", "Pitch") }
+    var reverse: String { text("되돌리기", "Reverse") }
+    var correct: String { text("수정", "Correct") }
+    var details: String { text("상세 정보", "Details") }
+    var revised: String { text("수정됨", "REVISED") }
+    var issue: String { text("문제", "ISSUE") }
+    var completeAction: String { text("액션 완료", "Complete action") }
+    var completeEvent: String { text("이벤트 완료", "Complete event") }
+    var appendCompletedDetails: String { text("완료 정보 추가", "Append completed details") }
+    var cancel: String { text("취소", "Cancel") }
+    var playerOutTitle: String { text("교체 아웃 선수", "Player out") }
+    var playerInTitle: String { text("교체 인 선수", "Player in") }
+    var penaltyTaker: String { text("페널티 키커", "Penalty taker") }
+    var outcome: String { text("결과", "Outcome") }
+    var injuredPlayer: String { text("부상 선수", "Injured player") }
+    var goalscorer: String { text("득점 선수", "Goalscorer") }
+    var cardRecipient: String { text("카드 대상 선수", "Card recipient") }
+    var player: String { text("선수", "Player") }
+    var selectPlayer: String { text("선수 선택", "Select player") }
+    var disciplinaryReason: String { text("징계 사유", "Disciplinary reason") }
+    var requiredReason: String { text("필수 사유", "Required reason") }
+    var requiredIncidentNarrative: String { text("필수 사건 설명", "Required incident narrative") }
+    var describeIncident: String { text("목격 내용과 조치를 설명하세요", "Describe what you saw and the action taken") }
+    var directRedNarrativeGuidance: String {
+        text("이 설명은 퇴장 사건 보고서의 기초가 됩니다.",
+             "This narrative becomes the foundation of the direct-red incident report.")
+    }
+    var incidentLocation: String { text("사건 위치", "Incident location") }
+    var exactLocationRequired: String { text("보고서에 정확한 위치 필요", "Exact location required for report") }
+    var incidentLocationGuidance: String {
+        text("활성화하면 경기 기록에서 구장 위치를 추가할 때까지 서명할 수 없습니다.",
+             "If enabled, sign-off is blocked until a pitch location is added from the timeline.")
+    }
+    var tapIncidentLocation: String { text("사건 위치를 탭하세요", "Tap the incident location") }
+    var accuracy: String { text("정확도", "Accuracy") }
+    var status: String { text("상태", "Status") }
+    var refereeConfirmed: String { text("심판 확인", "Referee confirmed") }
+    var estimated: String { text("추정", "Estimated") }
+    var unconfirmed: String { text("미확인", "Unconfirmed") }
+    var appendPitchLocation: String { text("구장 위치 추가", "Append pitch location") }
+    var pitchLocation: String { text("구장 위치", "Pitch location") }
+    var correctedEvent: String { text("수정된 이벤트", "Corrected event") }
+    var cardLabel: String { text("카드", "Card") }
+    var red: String { text("퇴장", "Red") }
+    var whatWasCorrected: String { text("무엇을 수정했나요?", "What was corrected?") }
+    var whyReverseEvent: String { text("이 이벤트를 되돌리는 이유는 무엇인가요?", "Why should this event be reversed?") }
+    var appendCorrection: String { text("수정 사항 추가", "Append correction") }
+    var appendReversal: String { text("되돌리기 추가", "Append reversal") }
+    var correctEvent: String { text("이벤트 수정", "Correct event") }
+    var reverseEvent: String { text("이벤트 되돌리기", "Reverse event") }
+
+    func timelineEventTitle(_ eventType: String, fallback: String) -> String {
+        guard usesKorean else { return fallback }
+        return [
+            "goal_recorded": "득점", "foul_recorded": "파울", "card_recorded": "카드",
+            "stoppage_time_recorded": "추가 시간 표시", "substitution_recorded": "선수 교체",
+            "penalty_recorded": "페널티", "injury_recorded": "부상", "var_recorded": "VAR 판독",
+            "suspension_recorded": "경기 중단", "restart_recorded": "경기 재개",
+            "period_started": "피리어드 시작", "period_ended": "피리어드 종료",
+            "event_corrected": "수정", "event_reversed": "되돌리기", "location_added": "구장 위치"
+        ][eventType] ?? fallback
+    }
+
+    func detailPrefix(_ key: String) -> String {
+        guard usesKorean else { return key }
+        return ["Out": "교체 아웃", "In": "교체 인"][key] ?? key
+    }
+
+    func enumValue(_ rawValue: String) -> String {
+        let fallback = rawValue.replacingOccurrences(of: "_", with: " ").capitalized
+        guard usesKorean else { return fallback }
+        return ["pending": "대기 중", "scored": "득점", "missed": "실패", "saved": "선방",
+                "post": "골대", "retake": "재시도", "confirmed": "확정", "overturned": "번복",
+                "no_change": "변경 없음", "cancelled": "취소", "yellow": "경고", "red": "퇴장",
+                "direct_red": "직접 퇴장", "mistaken_identity": "대상 선수 착오", "other": "기타",
+                "started": "시작", "resumed": "재개", "kickoff": "킥오프", "free_kick": "프리킥",
+                "penalty_kick": "페널티킥", "throw_in": "스로인", "goal_kick": "골킥",
+                "corner_kick": "코너킥", "dropped_ball": "드롭볼"][rawValue] ?? fallback
+    }
+
+    // Post-match reports
+    var postMatchReview: String { text("경기 후 검토", "Post-match review") }
+    var report: String { text("보고서", "Report") }
+    func reportKindName(_ kind: String) -> String {
+        switch kind {
+        case "match": return text("경기 보고서", "Match report")
+        case "referee": return text("심판 보고서", "Referee report")
+        case "incident": return text("사건 보고서", "Incident report")
+        default: return kind
+        }
+    }
+    var noQualifyingIncidents: String { text("해당 사건이 없습니다", "No qualifying incidents") }
+    var incident: String { text("사건", "Incident") }
+    var unknown: String { text("알 수 없음", "Unknown") }
+    var shortSummary: String { text("짧은 요약", "Short summary") }
+    var whatHappened: String { text("발생 내용", "What happened") }
+    var description: String { text("설명", "Description") }
+    var actionTaken: String { text("취한 조치", "Action taken") }
+    var additionalNotes: String { text("추가 메모", "Additional notes") }
+    var saveNewContentVersion: String { text("새 내용 버전 저장", "Save new content version") }
+    func currentContentVersion(_ version: Int) -> String { text("현재 내용 버전: \(version)", "Current content version: \(version)") }
+    var supersededContentGuidance: String {
+        text("저장된 내용이 변경되어 이전 서명은 대체되었습니다.",
+             "Saved content changed this report; earlier signatures are superseded.")
+    }
+    func linkedSeriousEvents(_ ids: String) -> String { text("연결된 중요 이벤트: \(ids)", "Linked serious events: \(ids)") }
+    var structuredNarrative: String { text("구조화된 설명", "Structured narrative") }
+    var requiredForSignOff: String { text("서명에 필수", "Required for sign-off") }
+    var addPhoto: String { text("사진 추가", "Add photo") }
+    var addFile: String { text("파일 추가", "Add file") }
+    var noAttachments: String { text("첨부 파일 없음", "No attachments") }
+    var required: String { text("필수", "Required") }
+    func attachmentSummary(bytes: Int64, checksum: String, required: Bool) -> String {
+        text("\(bytes)바이트 · SHA-256 \(checksum)…" + (required ? " · 필수" : ""),
+             "\(bytes) bytes · SHA-256 \(checksum)…" + (required ? " · Required" : ""))
+    }
+    var privateAttachments: String { text("비공개 첨부 파일", "Private attachments") }
+    var attachmentGuidance: String {
+        text("파일은 비공개 앱 저장소에 복사됩니다. 보고서 서명 시 정확한 바이트와 체크섬이 고정됩니다.",
+             "Files are copied into private app storage. Their exact bytes and checksum are frozen when this report is signed.")
+    }
+    var finalScore: String { text("최종 점수", "Final score") }
+    var confirmFinalScore: String { text("이 최종 점수를 확인합니다", "I confirm this final score") }
+    var blockingIssues: String { text("차단 문제", "Blocking issues") }
+    var resolveBlockingIssues: String { text("서명 전에 모든 차단 문제를 해결하세요.", "Resolve every blocking issue before signing.") }
+    var noBlockingIssues: String { text("차단 문제 없음", "No blocking issues") }
+    var validation: String { text("검증", "Validation") }
+    var warnings: String { text("경고", "Warnings") }
+    var warningsGuidance: String { text("경고는 서명을 막지 않지만 검토해야 합니다.", "Warnings do not prevent signing, but should be reviewed.") }
+    var refereeDeclaration: String { text("심판 선언", "Referee declaration") }
+    var declaration: String {
+        text("이 보고서를 검토했으며 경기 기록을 정확하게 반영함을 확인합니다.",
+             "I confirm that I have reviewed this report and that it accurately reflects the match record.")
+    }
+    var agreeAndSign: String { text("동의하고 서명하겠습니다", "I agree and intend to sign") }
+    func sign(_ reportName: String) -> String { text("\(reportName) 서명", "Sign \(reportName)") }
+    var confirmProjectedScore: String {
+        text("서명 가능한 검증을 실행하려면 예상 최종 점수를 확인하세요.",
+             "Confirm the projected final score to run the signable validation.")
+    }
+    var acceptDeclaration: String { text("서명을 활성화하려면 선언에 동의하세요.", "Accept the declaration to enable signing.") }
+    var signedVersionHistory: String { text("서명 버전 기록", "Signed version history") }
+    var noSignedVersions: String { text("서명된 버전 없음", "No signed versions") }
+    var signReportVersionPrompt: String { text("이 보고서 버전에 서명할까요?", "Sign this report version?") }
+    var signingFreezeGuidance: String {
+        text("서명하면 현재 보고서 내용과 감사 데이터가 고정됩니다. 이후 변경 시 이 버전은 대체됩니다.",
+             "Signing freezes the current report content and audit data. Later changes will supersede this version.")
+    }
+    func version(_ number: Int) -> String { text("버전 \(number)", "Version \(number)") }
+    var current: String { text("현재", "CURRENT") }
+    var superseded: String { text("대체됨", "SUPERSEDED") }
+    func signedBy(_ name: String, at date: String) -> String { text("\(name) 서명 · \(date)", "Signed by \(name) · \(date)") }
+    func reportVersionDetails(content: Int, template: String, events: Int) -> String {
+        text("내용 v\(content) · 템플릿 \(template) · 원본 이벤트 \(events)개",
+             "Content v\(content) · Template \(template) · \(events) source events")
+    }
+    var immutableHistoryGuidance: String {
+        text("변경 불가능한 기록으로 보관됩니다. 최신 버전을 만들려면 현재 보고서에 다시 서명하세요.",
+             "Kept as immutable history. Sign the current report again for a current version.")
+    }
+    func share(_ format: String) -> String { text("\(format) 공유", "Share \(format)") }
+    var file: String { text("파일", "file") }
+    func eventReference(_ id: String) -> String { text("이벤트 \(id)", "Event \(id)") }
+    func incidentReference(_ id: String) -> String { text("사건 \(id)", "Incident \(id)") }
+
+    func transferLabel(peer: String, state: String, progress: String, error: String?) -> String {
+        let fallbackError = error ?? text("재시도 필요", "retry required")
+        switch state {
+        case "pending": return text("\(peer) 전송: 대기 중\(progress)", "Transfer to \(peer): pending\(progress)")
+        case "transferring": return text("\(peer) 전송: 진행 중\(progress)", "Transfer to \(peer): in progress\(progress)")
+        case "completed": return text("\(peer) 전송: 완료", "Transfer to \(peer): complete")
+        default: return text("\(peer) 전송: 실패 · \(fallbackError)", "Transfer to \(peer): failed · \(fallbackError)")
+        }
+    }
+
+    func reportIssueTitle(code: String, fallback: String) -> String {
+        guard usesKorean else { return fallback }
+        return [
+            "fixture_missing": "경기 정보가 없습니다", "period_still_active": "경기 피리어드가 아직 진행 중입니다",
+            "match_not_complete": "경기가 종료되지 않았습니다", "score_not_confirmed": "최종 점수가 확인되지 않았습니다",
+            "score_confirmation_mismatch": "확인한 점수가 경기 기록과 일치하지 않습니다",
+            "accountable_referee_missing": "책임 심판이 없습니다", "timeline_integrity_invalid": "경기 기록 무결성 검증에 실패했습니다",
+            "event_payload_invalid": "이벤트 데이터가 올바르지 않습니다", "goal_player_missing": "득점 선수가 없습니다",
+            "card_player_missing": "카드 대상 선수가 없습니다", "card_reason_missing": "징계 사유가 없습니다",
+            "direct_red_narrative_missing": "퇴장 사건 설명이 없습니다", "required_location_missing": "필수 사건 위치가 없습니다",
+            "substitution_players_missing": "교체 아웃 및 인 선수가 모두 필요합니다", "penalty_outcome_pending": "페널티 결과 확인이 필요합니다",
+            "injury_player_missing": "부상 선수가 확인되지 않았습니다", "var_outcome_pending": "VAR 판독 결과가 완료되지 않았습니다",
+            "required_attachment_unreadable": "필수 첨부 파일이 없거나 체크섬 검증에 실패했습니다",
+            "missing_revision_target": "수정 또는 되돌리기 대상이 없습니다", "ambiguous_revision": "이벤트 수정 사항이 충돌합니다",
+            "revision_cycle": "수정 또는 되돌리기 연결이 순환합니다"
+        ][code] ?? fallback
+    }
+
+    func statusMessage(_ value: String) -> String {
+        guard usesKorean else { return value }
+        let exact = [
+            "Local database is unavailable": "로컬 데이터베이스를 사용할 수 없습니다",
+            "Fixture saved locally": "경기 정보가 로컬에 저장되었습니다",
+            "Match draft saved locally": "경기 초안이 로컬에 저장되었습니다",
+            "Event details completed": "이벤트 상세 정보가 완료되었습니다",
+            "Pitch location appended": "구장 위치가 추가되었습니다",
+            "Goal saved locally": "득점이 로컬에 저장되었습니다", "Foul saved locally": "파울이 로컬에 저장되었습니다",
+            "Yellow card saved locally": "경고가 로컬에 저장되었습니다", "Red card saved locally": "퇴장이 로컬에 저장되었습니다",
+            "Added-time marker saved": "추가 시간 표시가 저장되었습니다", "Choose two distinct roster players": "서로 다른 명단 선수 두 명을 선택하세요",
+            "Substitution saved locally": "선수 교체가 로컬에 저장되었습니다", "Penalty saved locally": "페널티가 로컬에 저장되었습니다",
+            "Injury saved locally": "부상이 로컬에 저장되었습니다", "VAR review saved locally": "VAR 판독이 로컬에 저장되었습니다",
+            "Suspension state saved locally": "경기 중단 상태가 로컬에 저장되었습니다", "Restart saved locally": "경기 재개가 로컬에 저장되었습니다",
+            "Match action details completed": "경기 액션 상세 정보가 완료되었습니다", "Event reversed": "이벤트를 되돌렸습니다",
+            "Event corrected": "이벤트를 수정했습니다", "Could not read the original event": "원본 이벤트를 읽을 수 없습니다",
+            "Could not encode match action": "경기 액션을 인코딩할 수 없습니다", "Match is already complete": "경기가 이미 종료되었습니다",
+            "Attachment stored and checksum verified": "첨부 파일을 저장하고 체크섬을 확인했습니다"
+        ]
+        if let localized = exact[value] { return localized }
+        let errorPrefixes = [
+            "Could not save fixture: ": "경기 정보를 저장할 수 없습니다: ", "Could not save match draft: ": "경기 초안을 저장할 수 없습니다: ",
+            "Could not complete details: ": "상세 정보를 완료할 수 없습니다: ", "Could not add location: ": "위치를 추가할 수 없습니다: ",
+            "Could not complete action: ": "액션을 완료할 수 없습니다: ", "Could not revise event: ": "이벤트를 수정할 수 없습니다: ",
+            "Could not save event: ": "이벤트를 저장할 수 없습니다: ", "Could not start first half: ": "전반을 시작할 수 없습니다: ",
+            "Could not end period: ": "피리어드를 종료할 수 없습니다: ", "Could not review report: ": "보고서를 검토할 수 없습니다: ",
+            "Could not save report content: ": "보고서 내용을 저장할 수 없습니다: ", "Could not sign report: ": "보고서에 서명할 수 없습니다: ",
+            "Could not export report: ": "보고서를 내보낼 수 없습니다: ", "Could not store attachment: ": "첨부 파일을 저장할 수 없습니다: ",
+            "Could not read attachment: ": "첨부 파일을 읽을 수 없습니다: ", "Immediate Watch delivery failed: ": "Watch 즉시 전송에 실패했습니다: ",
+            "Watch session activation failed: ": "Watch 세션 활성화에 실패했습니다: "
+        ]
+        for (prefix, localized) in errorPrefixes where value.hasPrefix(prefix) {
+            return localized + value.dropFirst(prefix.count)
+        }
+        if value.hasSuffix(" started") {
+            let period = String(value.dropLast(" started".count)).uppercased()
+            return "\(periodLabel(period)) 시작"
+        }
+        if value.hasSuffix(" ended") {
+            let period = String(value.dropLast(" ended".count)).uppercased()
+            return "\(periodLabel(period)) 종료"
+        }
+        if value.hasPrefix("Report content version "), value.hasSuffix(" saved") {
+            let version = value.dropFirst("Report content version ".count).dropLast(" saved".count)
+            return "보고서 내용 버전 \(version)이 저장되었습니다"
+        }
+        if value.hasSuffix(" export ready to share") {
+            return "\(value.dropLast(" export ready to share".count)) 내보내기 파일을 공유할 수 있습니다"
+        }
+        for reportName in ["Match report", "Referee report", "Incident report"]
+            where value.hasPrefix("\(reportName) version ") && value.hasSuffix(" signed") {
+            let number = value.dropFirst("\(reportName) version ".count).dropLast(" signed".count)
+            let rawKind = reportName == "Match report" ? "match" : (reportName == "Referee report" ? "referee" : "incident")
+            return "\(reportKindName(rawKind)) 버전 \(number)에 서명했습니다"
+        }
+        return value
+    }
+
     func periodLabel(_ value: String) -> String {
         guard usesKorean else { return value }
         return ["WAITING FOR IPHONE": "iPhone 대기 중", "NOT STARTED": "시작 전", "FIRST HALF": "전반",

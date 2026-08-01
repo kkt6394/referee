@@ -952,7 +952,7 @@ private struct PhoneMatchSetupView: View {
                 .disabled(match.fieldReadiness?.canStartMatch == false)
                 .accessibilityIdentifier("setup.openControl")
             }
-            if let message = match.saveMessage { Text(message).font(.footnote).foregroundStyle(.secondary) }
+            if let message = match.saveMessage { Text(copy.statusMessage(message)).font(.footnote).foregroundStyle(.secondary) }
         }
         .navigationTitle(copy.matchSetup)
         .navigationDestination(isPresented: $showingControl) { PhoneMatchControlView() }
@@ -1073,7 +1073,7 @@ struct PhoneMatchControlView: View {
                                              pending: match.pendingSyncCount, failed: match.syncFailure != nil))
                             .font(.footnote.weight(.semibold))
                         if let failure = match.syncFailure {
-                            Text(failure).font(.caption).foregroundStyle(.secondary)
+                            Text(copy.statusMessage(failure)).font(.caption).foregroundStyle(.secondary)
                         } else if let synced = match.lastPeerSyncAt {
                             Text(copy.lastWatchContact(synced.formatted(date: .omitted, time: .shortened)))
                                 .font(.caption).foregroundStyle(.secondary)
@@ -1155,7 +1155,7 @@ struct PhoneMatchControlView: View {
                         .accessibilityIdentifier("match.period.end")
                 }
                 if let saveMessage = match.saveMessage {
-                    Label(saveMessage, systemImage: "checkmark.icloud")
+                    Label(copy.statusMessage(saveMessage), systemImage: "checkmark.icloud")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
             }
@@ -1205,6 +1205,7 @@ private extension ReportKind {
 
 private struct PhonePostMatchReviewView: View {
     @EnvironmentObject private var match: PhoneMatchStore
+    @Environment(\.refereeCopy) private var copy
     @State private var reportKind: ReportKind = .match
     @State private var scoreConfirmed = false
     @State private var declarationAccepted = false
@@ -1218,7 +1219,7 @@ private struct PhonePostMatchReviewView: View {
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var attachmentIsRequired = false
 
-    private let declaration = "I confirm that I have reviewed this report and that it accurately reflects the match record."
+    private var declaration: String { copy.declaration }
 
     private var confirmedScore: ConfirmedScore? {
         scoreConfirmed ? ConfirmedScore(home: match.homeScore, away: match.awayScore) : nil
@@ -1243,20 +1244,20 @@ private struct PhonePostMatchReviewView: View {
 
     var body: some View {
         List {
-            Section("Report") {
-                Picker("Report", selection: $reportKind) {
+            Section(copy.report) {
+                Picker(copy.report, selection: $reportKind) {
                     ForEach(ReportKind.allCases, id: \.self) { kind in
-                        Text(kind.displayName).tag(kind)
+                        Text(copy.reportKindName(kind.rawValue)).tag(kind)
                     }
                 }
                 .pickerStyle(.segmented)
                 if reportKind == .incident {
                     if documents.isEmpty {
-                        Text("No qualifying incidents").foregroundStyle(.secondary)
+                        Text(copy.noQualifyingIncidents).foregroundStyle(.secondary)
                     } else {
-                        Picker("Incident", selection: $selectedDocumentID) {
+                        Picker(copy.incident, selection: $selectedDocumentID) {
                             ForEach(documents) { document in
-                                Text("Incident \(document.primaryEventID.map { String($0.uuidString.prefix(8)) } ?? "Unknown")")
+                                Text(copy.incidentReference(document.primaryEventID.map { String($0.uuidString.prefix(8)) } ?? copy.unknown))
                                     .tag(Optional(document.id))
                             }
                         }
@@ -1266,14 +1267,14 @@ private struct PhonePostMatchReviewView: View {
 
             if let document = selectedDocument {
                 Section {
-                    TextField("Short summary", text: $summary)
-                    TextField(reportKind == .incident ? "What happened" : "Description", text: $narrativeDescription, axis: .vertical)
+                    TextField(copy.shortSummary, text: $summary)
+                    TextField(reportKind == .incident ? copy.whatHappened : copy.description, text: $narrativeDescription, axis: .vertical)
                         .lineLimit(3...8)
-                    TextField("Action taken", text: $actionTaken, axis: .vertical)
+                    TextField(copy.actionTaken, text: $actionTaken, axis: .vertical)
                         .lineLimit(2...6)
-                    TextField("Additional notes", text: $additionalNotes, axis: .vertical)
+                    TextField(copy.additionalNotes, text: $additionalNotes, axis: .vertical)
                         .lineLimit(2...6)
-                    Button("Save new content version", systemImage: "square.and.arrow.down") {
+                    Button(copy.saveNewContentVersion, systemImage: "square.and.arrow.down") {
                         let content = StructuredReportContent(summary: summary,
                                                               description: narrativeDescription,
                                                               actionTaken: actionTaken,
@@ -1281,33 +1282,33 @@ private struct PhonePostMatchReviewView: View {
                         _ = match.saveReportContent(documentID: document.id, content: content,
                                                     confirmedScore: confirmedScore)
                     }
-                    Text("Current content version: \(document.contentVersion)")
+                    Text(copy.currentContentVersion(document.contentVersion))
                         .font(.caption).foregroundStyle(.secondary)
                     if versions.contains(where: { $0.status == .superseded }) {
-                        Label("Saved content changed this report; earlier signatures are superseded.",
+                        Label(copy.supersededContentGuidance,
                               systemImage: "exclamationmark.arrow.trianglehead.2.clockwise.rotate.90")
                             .font(.caption).foregroundStyle(.orange)
                     }
                     if reportKind == .incident {
-                        Text("Linked serious events: \(document.linkedEventIDs.map { String($0.uuidString.prefix(8)) }.joined(separator: ", "))")
+                        Text(copy.linkedSeriousEvents(document.linkedEventIDs.map { String($0.uuidString.prefix(8)) }.joined(separator: ", ")))
                             .font(.caption).foregroundStyle(.secondary)
                     }
-                } header: { Text("Structured narrative") }
+                } header: { Text(copy.structuredNarrative) }
 
                 Section {
-                    Toggle("Required for sign-off", isOn: $attachmentIsRequired)
+                    Toggle(copy.requiredForSignOff, isOn: $attachmentIsRequired)
                     HStack {
                         PhotosPicker(selection: $selectedPhoto, matching: .images) {
-                            Label("Add photo", systemImage: "photo.badge.plus")
+                            Label(copy.addPhoto, systemImage: "photo.badge.plus")
                         }
                         Spacer()
                         Button { showingFileImporter = true } label: {
-                            Label("Add file", systemImage: "doc.badge.plus")
+                            Label(copy.addFile, systemImage: "doc.badge.plus")
                         }
                     }
                     let attachments = match.attachments(documentID: document.id)
                     if attachments.isEmpty {
-                        Text("No attachments").foregroundStyle(.secondary)
+                        Text(copy.noAttachments).foregroundStyle(.secondary)
                     } else {
                         let transfers = match.attachmentTransfers(documentID: document.id)
                         ForEach(attachments) { attachment in
@@ -1316,8 +1317,9 @@ private struct PhonePostMatchReviewView: View {
                                     .foregroundStyle(attachment.isReadable ? Color.green : .red)
                                 VStack(alignment: .leading, spacing: 3) {
                                     Text(attachment.originalFilename).lineLimit(1)
-                                    Text("\(attachment.byteCount) bytes · SHA-256 \(attachment.checksum.prefix(12))…" +
-                                         (attachment.isRequired ? " · Required" : ""))
+                                    Text(copy.attachmentSummary(bytes: attachment.byteCount,
+                                                                checksum: String(attachment.checksum.prefix(12)),
+                                                                required: attachment.isRequired))
                                         .font(.caption).foregroundStyle(.secondary)
                                     ForEach(transfers.filter { $0.attachmentID == attachment.id }) { transfer in
                                         Text(transferLabel(transfer))
@@ -1328,12 +1330,12 @@ private struct PhonePostMatchReviewView: View {
                             }
                         }
                     }
-                } header: { Text("Private attachments") } footer: {
-                    Text("Files are copied into private app storage. Their exact bytes and checksum are frozen when this report is signed.")
+                } header: { Text(copy.privateAttachments) } footer: {
+                    Text(copy.attachmentGuidance)
                 }
             }
 
-            Section("Final score") {
+            Section(copy.finalScore) {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(match.homeTeam).font(.subheadline).foregroundStyle(.secondary)
@@ -1347,7 +1349,7 @@ private struct PhonePostMatchReviewView: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .trailing)
                 }
-                Toggle("I confirm this final score", isOn: $scoreConfirmed)
+                Toggle(copy.confirmFinalScore, isOn: $scoreConfirmed)
                     .font(.headline)
                     .accessibilityIdentifier("report.score.confirm")
             }
@@ -1356,51 +1358,51 @@ private struct PhonePostMatchReviewView: View {
                 Section {
                     ForEach(blockingIssues) { issue in issueRow(issue, colour: .red) }
                 } header: {
-                    Label("Blocking issues", systemImage: "xmark.octagon.fill")
+                    Label(copy.blockingIssues, systemImage: "xmark.octagon.fill")
                 } footer: {
-                    Text("Resolve every blocking issue before signing.")
+                    Text(copy.resolveBlockingIssues)
                 }
             } else if validation != nil {
                 Section {
-                    Label("No blocking issues", systemImage: "checkmark.circle.fill")
+                    Label(copy.noBlockingIssues, systemImage: "checkmark.circle.fill")
                         .foregroundStyle(.green)
-                } header: { Text("Validation") }
+                } header: { Text(copy.validation) }
             }
 
             if !warnings.isEmpty {
                 Section {
                     ForEach(warnings) { issue in issueRow(issue, colour: .orange) }
                 } header: {
-                    Label("Warnings", systemImage: "exclamationmark.triangle.fill")
+                    Label(copy.warnings, systemImage: "exclamationmark.triangle.fill")
                 } footer: {
-                    Text("Warnings do not prevent signing, but should be reviewed.")
+                    Text(copy.warningsGuidance)
                 }
             }
 
-            Section("Referee declaration") {
+            Section(copy.refereeDeclaration) {
                 Text(declaration).font(.subheadline).foregroundStyle(.secondary)
-                Toggle("I agree and intend to sign", isOn: $declarationAccepted)
+                Toggle(copy.agreeAndSign, isOn: $declarationAccepted)
                     .font(.headline)
                     .accessibilityIdentifier("report.declaration.accept")
             }
 
             Section {
-                Button("Sign \(reportKind.displayName)", systemImage: "signature") {
+                Button(copy.sign(copy.reportKindName(reportKind.rawValue)), systemImage: "signature") {
                     showingSignConfirmation = true
                 }
                 .disabled(!canSign || selectedDocument == nil)
                 .accessibilityIdentifier("report.sign")
             } footer: {
                 if !scoreConfirmed {
-                    Text("Confirm the projected final score to run the signable validation.")
+                    Text(copy.confirmProjectedScore)
                 } else if !declarationAccepted {
-                    Text("Accept the declaration to enable signing.")
+                    Text(copy.acceptDeclaration)
                 }
             }
 
-            Section("Signed version history") {
+            Section(copy.signedVersionHistory) {
                 if versions.isEmpty {
-                    Text("No signed versions").foregroundStyle(.secondary)
+                    Text(copy.noSignedVersions).foregroundStyle(.secondary)
                 } else {
                     ForEach(versions) { version in
                         SignedReportVersionRow(
@@ -1415,13 +1417,13 @@ private struct PhonePostMatchReviewView: View {
 
             if let saveMessage = match.saveMessage {
                 Section {
-                    Text(saveMessage)
+                    Text(copy.statusMessage(saveMessage))
                         .font(.footnote).foregroundStyle(.secondary)
                         .accessibilityIdentifier("report.saveMessage")
                 }
             }
         }
-        .navigationTitle("Post-match review")
+        .navigationTitle(copy.postMatchReview)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { refresh() }
         .onChange(of: scoreConfirmed) { _ in refresh() }
@@ -1444,9 +1446,9 @@ private struct PhonePostMatchReviewView: View {
                 selectedPhoto = nil
             }
         }
-        .confirmationDialog("Sign this report version?", isPresented: $showingSignConfirmation,
+        .confirmationDialog(copy.signReportVersionPrompt, isPresented: $showingSignConfirmation,
                             titleVisibility: .visible) {
-            Button("Sign \(reportKind.displayName)") {
+            Button(copy.sign(copy.reportKindName(reportKind.rawValue))) {
                 guard let confirmedScore, let document = selectedDocument else { return }
                 if match.signReport(kind: reportKind, documentID: document.id,
                                     confirmedScore: confirmedScore, declaration: declaration) {
@@ -1454,9 +1456,9 @@ private struct PhonePostMatchReviewView: View {
                 }
             }
             .accessibilityIdentifier("report.sign.confirm")
-            Button("Cancel", role: .cancel) {}
+            Button(copy.cancel, role: .cancel) {}
         } message: {
-            Text("Signing freezes the current report content and audit data. Later changes will supersede this version.")
+            Text(copy.signingFreezeGuidance)
         }
     }
 
@@ -1464,12 +1466,8 @@ private struct PhonePostMatchReviewView: View {
         let progress = transfer.byteCount > 0
             ? " · \(Int((Double(transfer.bytesConfirmed) / Double(transfer.byteCount)) * 100))%"
             : ""
-        switch transfer.state {
-        case .pending: return "Transfer to \(transfer.peer): pending\(progress)"
-        case .transferring: return "Transfer to \(transfer.peer): in progress\(progress)"
-        case .completed: return "Transfer to \(transfer.peer): complete"
-        case .failed: return "Transfer to \(transfer.peer): failed · \(transfer.error ?? "retry required")"
-        }
+        return copy.transferLabel(peer: transfer.peer, state: transfer.state.rawValue,
+                                  progress: progress, error: transfer.error)
     }
 
     private func refresh() {
@@ -1493,9 +1491,9 @@ private struct PhonePostMatchReviewView: View {
             Image(systemName: issue.severity == .blocking ? "xmark.circle.fill" : "exclamationmark.triangle.fill")
                 .foregroundStyle(colour)
             VStack(alignment: .leading, spacing: 3) {
-                Text(issueTitle(issue.code))
+                Text(copy.reportIssueTitle(code: issue.code, fallback: issueTitle(issue.code)))
                 if let eventID = issue.eventID {
-                    Text("Event \(eventID.uuidString.prefix(8))")
+                    Text(copy.eventReference(String(eventID.uuidString.prefix(8))))
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
@@ -1531,6 +1529,7 @@ private struct PhonePostMatchReviewView: View {
 }
 
 private struct SignedReportVersionRow: View {
+    @Environment(\.refereeCopy) private var copy
     let version: SignedReportVersion
     let exportedURL: URL?
     let exportedFormat: ReportExportFormat?
@@ -1539,21 +1538,24 @@ private struct SignedReportVersionRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text("Version \(version.version)").font(.headline)
+                Text(copy.version(version.version)).font(.headline)
                 Spacer()
-                Text(version.status == .current ? "CURRENT" : "SUPERSEDED")
+                Text(version.status == .current ? copy.current : copy.superseded)
                     .font(.caption2.weight(.bold))
                     .foregroundStyle(version.status == .current ? Color.green : .orange)
                     .padding(.horizontal, 7).padding(.vertical, 3)
                     .background((version.status == .current ? Color.green : .orange).opacity(0.12),
                                 in: Capsule())
             }
-            Text("Signed by \(version.signer.displayName) · \(version.signedAt.formatted(date: .abbreviated, time: .shortened))")
+            Text(copy.signedBy(version.signer.displayName,
+                               at: version.signedAt.formatted(date: .abbreviated, time: .shortened)))
                 .font(.subheadline).foregroundStyle(.secondary)
-            Text("Content v\(version.contentVersion) · Template \(version.templateVersion) · \(version.eventIDs.count) source events")
+            Text(copy.reportVersionDetails(content: version.contentVersion,
+                                           template: version.templateVersion,
+                                           events: version.eventIDs.count))
                 .font(.caption).foregroundStyle(.secondary)
             if version.status == .superseded {
-                Text("Kept as immutable history. Sign the current report again for a current version.")
+                Text(copy.immutableHistoryGuidance)
                     .font(.caption).foregroundStyle(.orange)
             }
             HStack {
@@ -1566,7 +1568,7 @@ private struct SignedReportVersionRow: View {
                 Spacer()
                 if let exportedURL {
                     ShareLink(item: exportedURL) {
-                        Label("Share \(exportedFormat?.rawValue.uppercased() ?? "file")", systemImage: "square.and.arrow.up")
+                        Label(copy.share(exportedFormat?.rawValue.uppercased() ?? copy.file), systemImage: "square.and.arrow.up")
                     }
                     .buttonStyle(.borderedProminent)
                     .accessibilityIdentifier("report.export.share")
@@ -1581,6 +1583,7 @@ private enum TimelineRevisionMode: String { case correct, reverse }
 
 private struct PhoneTimelineView: View {
     @EnvironmentObject private var match: PhoneMatchStore
+    @Environment(\.refereeCopy) private var copy
     @State private var editor: TimelineEditor?
     @State private var detailEntry: MatchTimelineEntry?
     @State private var locationEntry: MatchTimelineEntry?
@@ -1596,8 +1599,8 @@ private struct PhoneTimelineView: View {
             if match.timeline.isEmpty {
                 VStack(spacing: 8) {
                     Image(systemName: "clock").font(.largeTitle).foregroundStyle(.secondary)
-                    Text("No events yet").font(.headline)
-                    Text("Match actions will appear here.").font(.subheadline).foregroundStyle(.secondary)
+                    Text(copy.noEventsYet).font(.headline)
+                    Text(copy.timelineEmptyGuidance).font(.subheadline).foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity).padding(.vertical, 36)
             }
@@ -1606,23 +1609,23 @@ private struct PhoneTimelineView: View {
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         if canLocate(entry) {
                             Button { locationEntry = entry } label: {
-                                Label("Pitch", systemImage: "map")
+                                Label(copy.pitch, systemImage: "map")
                             }
                             .tint(.green)
                         }
                         if entry.canRevise {
                             Button(role: .destructive) { editor = TimelineEditor(entry: entry, mode: .reverse) } label: {
-                                Label("Reverse", systemImage: "arrow.uturn.backward")
+                                Label(copy.reverse, systemImage: "arrow.uturn.backward")
                             }
                             if canCorrect(entry) {
                                 Button { editor = TimelineEditor(entry: entry, mode: .correct) } label: {
-                                    Label("Correct", systemImage: "pencil")
+                                    Label(copy.correct, systemImage: "pencil")
                                 }
                                 .tint(.blue)
                             }
                             if detailTypes.contains(entry.eventType) {
                                 Button { detailEntry = entry } label: {
-                                    Label("Details", systemImage: "person.text.rectangle")
+                                    Label(copy.details, systemImage: "person.text.rectangle")
                                 }
                                 .tint(.indigo)
                             }
@@ -1630,7 +1633,7 @@ private struct PhoneTimelineView: View {
                     }
             }
         }
-        .navigationTitle("Event timeline")
+        .navigationTitle(copy.eventTimeline)
         .sheet(item: $editor) { editor in
             RevisionEditorView(entry: editor.entry, mode: editor.mode)
                 .environmentObject(match)
@@ -1654,8 +1657,8 @@ private struct PhoneTimelineView: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text(title(entry)).font(.headline)
-                    if !entry.isActive { Text("REVISED").font(.caption2.weight(.bold)).foregroundStyle(.secondary) }
-                    if entry.hasRevisionIssue { Text("ISSUE").font(.caption2.weight(.bold)).foregroundStyle(.red) }
+                    if !entry.isActive { Text(copy.revised).font(.caption2.weight(.bold)).foregroundStyle(.secondary) }
+                    if entry.hasRevisionIssue { Text(copy.issue).font(.caption2.weight(.bold)).foregroundStyle(.red) }
                 }
                 HStack(spacing: 8) {
                     if let clock = entry.matchClockMs { Text(formatClock(clock)) }
@@ -1697,24 +1700,26 @@ private struct PhoneTimelineView: View {
     }
 
     private func title(_ entry: MatchTimelineEntry) -> String {
+        let fallback: String
         switch entry.eventType {
-        case "goal_recorded": return "Goal"
-        case "foul_recorded": return "Foul"
-        case "card_recorded": return "Card"
-        case "stoppage_time_recorded": return "Added-time marker"
-        case MatchActionType.substitution.rawValue: return "Substitution"
-        case MatchActionType.penalty.rawValue: return "Penalty"
-        case MatchActionType.injury.rawValue: return "Injury"
-        case MatchActionType.varReview.rawValue: return "VAR review"
-        case MatchActionType.suspension.rawValue: return "Match suspension"
-        case MatchActionType.restart.rawValue: return "Restart"
-        case "period_started": return "Period started"
-        case "period_ended": return "Period ended"
-        case "event_corrected": return "Correction"
-        case "event_reversed": return "Reversal"
-        case "location_added": return "Pitch location"
-        default: return entry.eventType.replacingOccurrences(of: "_", with: " ").capitalized
+        case "goal_recorded": fallback = "Goal"
+        case "foul_recorded": fallback = "Foul"
+        case "card_recorded": fallback = "Card"
+        case "stoppage_time_recorded": fallback = "Added-time marker"
+        case MatchActionType.substitution.rawValue: fallback = "Substitution"
+        case MatchActionType.penalty.rawValue: fallback = "Penalty"
+        case MatchActionType.injury.rawValue: fallback = "Injury"
+        case MatchActionType.varReview.rawValue: fallback = "VAR review"
+        case MatchActionType.suspension.rawValue: fallback = "Match suspension"
+        case MatchActionType.restart.rawValue: fallback = "Restart"
+        case "period_started": fallback = "Period started"
+        case "period_ended": fallback = "Period ended"
+        case "event_corrected": fallback = "Correction"
+        case "event_reversed": fallback = "Reversal"
+        case "location_added": fallback = "Pitch location"
+        default: fallback = entry.eventType.replacingOccurrences(of: "_", with: " ").capitalized
         }
+        return copy.timelineEventTitle(entry.eventType, fallback: fallback)
     }
 
     private func icon(_ type: String) -> String {
@@ -1742,17 +1747,17 @@ private struct PhoneTimelineView: View {
         if let reason = object["reason"] as? String { return reason }
         var parts: [String] = []
         if let side = object["teamSide"] as? String { parts.append(side == "home" ? match.homeTeam : match.awayTeam) }
-        if let colour = object["colour"] as? String { parts.append(colour.capitalized) }
+        if let colour = object["colour"] as? String { parts.append(copy.enumValue(colour)) }
         if let player = object["participantDisplayName"] as? String { parts.append(player) }
         if let discipline = object["disciplinaryReason"] as? String { parts.append(discipline) }
         if let cause = object["cause"] as? String { parts.append(cause.replacingOccurrences(of: "_", with: " ").capitalized) }
-        if let player = object["playerOutDisplayName"] as? String { parts.append("Out: \(player)") }
-        if let player = object["playerInDisplayName"] as? String { parts.append("In: \(player)") }
-        if let outcome = object["outcome"] as? String { parts.append(outcome.replacingOccurrences(of: "_", with: " ").capitalized) }
-        if let review = object["reviewType"] as? String { parts.append(review.replacingOccurrences(of: "_", with: " ").capitalized) }
-        if let state = object["state"] as? String { parts.append(state.capitalized) }
-        if let restart = object["restartType"] as? String { parts.append(restart.replacingOccurrences(of: "_", with: " ").capitalized) }
-        if let kind = object["periodKind"] as? String { parts.append(kind.replacingOccurrences(of: "_", with: " ").capitalized) }
+        if let player = object["playerOutDisplayName"] as? String { parts.append("\(copy.detailPrefix("Out")): \(player)") }
+        if let player = object["playerInDisplayName"] as? String { parts.append("\(copy.detailPrefix("In")): \(player)") }
+        if let outcome = object["outcome"] as? String { parts.append(copy.enumValue(outcome)) }
+        if let review = object["reviewType"] as? String { parts.append(copy.enumValue(review)) }
+        if let state = object["state"] as? String { parts.append(copy.enumValue(state)) }
+        if let restart = object["restartType"] as? String { parts.append(copy.enumValue(restart)) }
+        if let kind = object["periodKind"] as? String { parts.append(copy.enumValue(kind)) }
         if let regions = object["regions"] as? [String] {
             parts.append(regions.map { $0.replacingOccurrences(of: "_", with: " ").capitalized }.joined(separator: ", "))
         }
@@ -1767,6 +1772,7 @@ private struct PhoneTimelineView: View {
 private struct ExtendedActionDetailsView: View {
     @EnvironmentObject private var match: PhoneMatchStore
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.refereeCopy) private var copy
     let entry: MatchTimelineEntry
     @State private var primary: UUID?
     @State private var secondary: UUID?
@@ -1786,38 +1792,38 @@ private struct ExtendedActionDetailsView: View {
         NavigationStack {
             Form {
                 if entry.eventType == MatchActionType.substitution.rawValue {
-                    participantPicker("Player out", selection: $primary)
-                    participantPicker("Player in", selection: $secondary)
+                    participantPicker(copy.playerOutTitle, selection: $primary)
+                    participantPicker(copy.playerInTitle, selection: $secondary)
                 } else if entry.eventType == MatchActionType.penalty.rawValue {
-                    participantPicker("Penalty taker", selection: $primary)
-                    Picker("Outcome", selection: $penaltyOutcome) {
-                        ForEach(PenaltyOutcome.allCases, id: \.rawValue) { Text($0.rawValue.capitalized).tag($0) }
+                    participantPicker(copy.penaltyTaker, selection: $primary)
+                    Picker(copy.outcome, selection: $penaltyOutcome) {
+                        ForEach(PenaltyOutcome.allCases, id: \.rawValue) { Text(copy.enumValue($0.rawValue)).tag($0) }
                     }
                 } else if entry.eventType == MatchActionType.injury.rawValue {
-                    participantPicker("Injured player", selection: $primary)
+                    participantPicker(copy.injuredPlayer, selection: $primary)
                 } else if entry.eventType == MatchActionType.varReview.rawValue {
-                    Picker("Outcome", selection: $varOutcome) {
+                    Picker(copy.outcome, selection: $varOutcome) {
                         ForEach(VAROutcome.allCases, id: \.rawValue) {
-                            Text($0.rawValue.replacingOccurrences(of: "_", with: " ").capitalized).tag($0)
+                            Text(copy.enumValue($0.rawValue)).tag($0)
                         }
                     }
                 }
                 Section {
-                    Button("Append completed details") {
+                    Button(copy.appendCompletedDetails) {
                         match.completeMatchAction(entry, primary: primary, secondary: secondary,
                                                   outcome: completionOutcome)
                         dismiss()
                     }.disabled(!isValid)
                 }
             }
-            .navigationTitle("Complete action")
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
+            .navigationTitle(copy.completeAction)
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(copy.cancel) { dismiss() } } }
         }
     }
 
     @ViewBuilder private func participantPicker(_ title: String, selection: Binding<UUID?>) -> some View {
         Picker(title, selection: selection) {
-            Text("Select").tag(UUID?.none)
+            Text(copy.select).tag(UUID?.none)
             ForEach(players) { player in
                 Text("\(player.shirtNumber.map(String.init) ?? "–") · \(player.displayName)").tag(Optional(player.id))
             }
@@ -1843,6 +1849,7 @@ private struct ExtendedActionDetailsView: View {
 private struct EventDetailsView: View {
     @EnvironmentObject private var match: PhoneMatchStore
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.refereeCopy) private var copy
     let entry: MatchTimelineEntry
     @State private var playerID: UUID?
     @State private var disciplinaryReason = ""
@@ -1860,9 +1867,9 @@ private struct EventDetailsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section(entry.eventType == "goal_recorded" ? "Goalscorer" : "Card recipient") {
-                    Picker("Player", selection: $playerID) {
-                        Text("Select player").tag(UUID?.none)
+                Section(entry.eventType == "goal_recorded" ? copy.goalscorer : copy.cardRecipient) {
+                    Picker(copy.player, selection: $playerID) {
+                        Text(copy.selectPlayer).tag(UUID?.none)
                         ForEach(players) { player in
                             Text("\(player.shirtNumber.map(String.init) ?? "–") · \(player.displayName)").tag(Optional(player.id))
                         }
@@ -1870,25 +1877,25 @@ private struct EventDetailsView: View {
                     .accessibilityIdentifier("event.details.player")
                 }
                 if isCard {
-                    Section("Disciplinary reason") {
-                        TextField("Required reason", text: $disciplinaryReason, axis: .vertical).lineLimit(2...4)
+                    Section(copy.disciplinaryReason) {
+                        TextField(copy.requiredReason, text: $disciplinaryReason, axis: .vertical).lineLimit(2...4)
                     }
                 }
                 if isDirectRed {
-                    Section("Required incident narrative") {
-                        TextField("Describe what you saw and the action taken", text: $incidentNarrative, axis: .vertical)
+                    Section(copy.requiredIncidentNarrative) {
+                        TextField(copy.describeIncident, text: $incidentNarrative, axis: .vertical)
                             .lineLimit(5...10)
-                        Text("This narrative becomes the foundation of the direct-red incident report.")
+                        Text(copy.directRedNarrativeGuidance)
                             .font(.caption).foregroundStyle(.secondary)
                     }
-                    Section("Incident location") {
-                        Toggle("Exact location required for report", isOn: $locationRequired)
-                        Text("If enabled, sign-off is blocked until a pitch location is added from the timeline.")
+                    Section(copy.incidentLocation) {
+                        Toggle(copy.exactLocationRequired, isOn: $locationRequired)
+                        Text(copy.incidentLocationGuidance)
                             .font(.caption).foregroundStyle(.secondary)
                     }
                 }
                 Section {
-                    Button("Append completed details") {
+                    Button(copy.appendCompletedDetails) {
                         guard let playerID else { return }
                         match.completeDetails(for: entry, playerID: playerID,
                                               disciplinaryReason: isCard ? disciplinaryReason : nil,
@@ -1900,8 +1907,8 @@ private struct EventDetailsView: View {
                     .accessibilityIdentifier("event.details.save")
                 }
             }
-            .navigationTitle("Complete event")
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
+            .navigationTitle(copy.completeEvent)
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(copy.cancel) { dismiss() } } }
         }
     }
 
@@ -1914,6 +1921,7 @@ private struct EventDetailsView: View {
 private struct PitchLocationView: View {
     @EnvironmentObject private var match: PhoneMatchStore
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.refereeCopy) private var copy
     let entry: MatchTimelineEntry
     @State private var point = CGPoint(x: 50, y: 50)
     @State private var accuracy: LocationAccuracy = .refereeConfirmed
@@ -1921,7 +1929,7 @@ private struct PitchLocationView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Tap the incident location") {
+                Section(copy.tapIncidentLocation) {
                     GeometryReader { proxy in
                         ZStack {
                             RoundedRectangle(cornerRadius: 8).fill(Color.green.opacity(0.72))
@@ -1943,22 +1951,22 @@ private struct PitchLocationView: View {
                                 point.y * match.pitchWidthMetres / 100, point.x, point.y))
                         .font(.caption.monospacedDigit()).foregroundStyle(.secondary)
                 }
-                Section("Accuracy") {
-                    Picker("Status", selection: $accuracy) {
-                        Text("Referee confirmed").tag(LocationAccuracy.refereeConfirmed)
-                        Text("Estimated").tag(LocationAccuracy.estimated)
-                        Text("Unconfirmed").tag(LocationAccuracy.unconfirmed)
+                Section(copy.accuracy) {
+                    Picker(copy.status, selection: $accuracy) {
+                        Text(copy.refereeConfirmed).tag(LocationAccuracy.refereeConfirmed)
+                        Text(copy.estimated).tag(LocationAccuracy.estimated)
+                        Text(copy.unconfirmed).tag(LocationAccuracy.unconfirmed)
                     }
                 }
                 Section {
-                    Button("Append pitch location") {
+                    Button(copy.appendPitchLocation) {
                         if match.addLocation(to: entry, normalizedX: point.x, normalizedY: point.y,
                                              accuracy: accuracy) { dismiss() }
                     }
                 }
             }
-            .navigationTitle("Pitch location")
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
+            .navigationTitle(copy.pitchLocation)
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(copy.cancel) { dismiss() } } }
         }
     }
 
@@ -1980,6 +1988,7 @@ private struct PitchLocationView: View {
 private struct RevisionEditorView: View {
     @EnvironmentObject private var match: PhoneMatchStore
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.refereeCopy) private var copy
     let entry: MatchTimelineEntry
     let mode: TimelineRevisionMode
     @State private var reason = ""
@@ -1997,25 +2006,25 @@ private struct RevisionEditorView: View {
         NavigationStack {
             Form {
                 if mode == .correct {
-                    Section("Corrected event") {
-                        Picker("Team", selection: $teamSide) {
+                    Section(copy.correctedEvent) {
+                        Picker(copy.team, selection: $teamSide) {
                             Text(match.homeTeam).tag("home")
                             Text(match.awayTeam).tag("away")
                         }
                         if entry.eventType == "card_recorded" {
-                            Picker("Card", selection: $colour) {
-                                Text("Yellow").tag("yellow")
-                                Text("Red").tag("red")
+                            Picker(copy.cardLabel, selection: $colour) {
+                                Text(copy.yellow).tag("yellow")
+                                Text(copy.red).tag("red")
                             }
                         }
                     }
                 }
-                Section("Required reason") {
-                    TextField(mode == .correct ? "What was corrected?" : "Why should this event be reversed?", text: $reason, axis: .vertical)
+                Section(copy.requiredReason) {
+                    TextField(mode == .correct ? copy.whatWasCorrected : copy.whyReverseEvent, text: $reason, axis: .vertical)
                         .lineLimit(3...6)
                 }
                 Section {
-                    Button(mode == .correct ? "Append correction" : "Append reversal", role: mode == .reverse ? .destructive : nil) {
+                    Button(mode == .correct ? copy.appendCorrection : copy.appendReversal, role: mode == .reverse ? .destructive : nil) {
                         if mode == .correct {
                             match.correct(entry, teamSide: teamSide, colour: entry.eventType == "card_recorded" ? colour : nil, reason: reason)
                         } else {
@@ -2026,8 +2035,8 @@ private struct RevisionEditorView: View {
                     .disabled(reason.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
             }
-            .navigationTitle(mode == .correct ? "Correct event" : "Reverse event")
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
+            .navigationTitle(mode == .correct ? copy.correctEvent : copy.reverseEvent)
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(copy.cancel) { dismiss() } } }
         }
     }
 }

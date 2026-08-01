@@ -21,6 +21,18 @@ final class RefereePhoneUITests: XCTestCase {
     }
 
     @MainActor
+    func testKoreanTimelineLocalizesLiveFollowUpSurface() throws {
+        let app = launchSeededFixture(language: "ko")
+        saveFixture(in: app)
+
+        XCTAssertTrue(app.descendants(matching: .any)["match.period.start"].waitForExistence(timeout: 3))
+        scrollToElement(app.buttons["match.timeline"], in: app).tap()
+
+        XCTAssertTrue(app.navigationBars["경기 기록"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["아직 경기 기록이 없습니다"].exists)
+    }
+
+    @MainActor
     func testIncompleteFixtureShowsBlockingReadinessBeforeLiveControl() throws {
         let app = XCUIApplication()
         app.launchEnvironment["REFEREE_UI_TEST_DATABASE"] = UUID().uuidString
@@ -125,11 +137,11 @@ final class RefereePhoneUITests: XCTestCase {
     }
 
     @MainActor
-    private func launchSeededFixture() -> XCUIApplication {
+    private func launchSeededFixture(language: String = "en") -> XCUIApplication {
         let app = XCUIApplication()
         app.launchEnvironment["REFEREE_UI_TEST_DATABASE"] = UUID().uuidString
         app.launchEnvironment["REFEREE_UI_TEST_SEED"] = "fixture"
-        app.launchEnvironment["REFEREE_UI_TEST_LANGUAGE"] = "en"
+        app.launchEnvironment["REFEREE_UI_TEST_LANGUAGE"] = language
         app.launch()
         app.buttons["matches.create"].tap()
         XCTAssertEqual(app.textFields["fixture.competition"].value as? String, "KFA UI League")
