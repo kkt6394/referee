@@ -265,6 +265,57 @@ public final class LedgerStore: @unchecked Sendable {
         return result
     }
 
+    public func fieldReadiness(matchID: UUID) throws -> FieldReadiness {
+        let fixture = try fixture(matchID: matchID)
+        let participants = try participants(matchID: matchID)
+        let checklist = try preMatchChecklist(matchID: matchID)
+        var blocking: [FieldReadinessIssue] = []
+        var warnings: [FieldReadinessIssue] = []
+
+        func issue(_ id: String, _ title: String, _ detail: String, _ severity: FieldReadinessSeverity) -> FieldReadinessIssue {
+            FieldReadinessIssue(id: id, title: title, detail: detail, severity: severity)
+        }
+
+        if fixture?.competition.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty != false {
+            blocking.append(issue("fixture.competition", "Competition is missing", "Enter the competition before starting.", .blocking))
+        }
+        if fixture?.venueName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty != false {
+            blocking.append(issue("fixture.venue", "Venue is missing", "Enter the venue before starting.", .blocking))
+        }
+        let home = fixture?.homeTeamName.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let away = fixture?.awayTeamName.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if home.isEmpty || away.isEmpty || home.caseInsensitiveCompare(away) == .orderedSame {
+            blocking.append(issue("fixture.distinctTeams", "Teams are incomplete", "Enter two distinct team names.", .blocking))
+        }
+
+        if !participants.contains(where: { $0.role == "player" && $0.teamSide == "home" }) {
+            blocking.append(issue("roster.home", "Home roster is missing", "Add at least one home player.", .blocking))
+        }
+        if !participants.contains(where: { $0.role == "player" && $0.teamSide == "away" }) {
+            blocking.append(issue("roster.away", "Away roster is missing", "Add at least one away player.", .blocking))
+        }
+        if participants.filter({ $0.role == "accountable_referee" && $0.teamSide == nil }).count != 1 {
+            blocking.append(issue("referee.accountable", "Accountable referee is missing", "Assign exactly one accountable referee.", .blocking))
+        }
+
+        if !checklist.pitchChecked {
+            warnings.append(issue("checklist.pitch", "Pitch check is incomplete", "Confirm the pitch before kick-off.", .warning))
+        }
+        if !checklist.equipmentChecked {
+            warnings.append(issue("checklist.equipment", "Equipment check is incomplete", "Confirm the match equipment before kick-off.", .warning))
+        }
+        if !checklist.crewChecked {
+            warnings.append(issue("checklist.crew", "Crew check is incomplete", "Confirm the referee crew before kick-off.", .warning))
+        }
+        if !checklist.lineupChecked {
+            warnings.append(issue("checklist.lineup", "Lineup check is incomplete", "Confirm the starting lineups before kick-off.", .warning))
+        }
+        if try pitchDimensions(matchID: matchID) == nil {
+            warnings.append(issue("pitch.dimensions", "Pitch dimensions are missing", "Add dimensions to enable location conversion.", .warning))
+        }
+        return FieldReadiness(blocking: blocking, warnings: warnings)
+    }
+
     /// Completes a fast-captured goal or card by appending a correction whose
     /// replacement payload contains match-owned participant display data.
     @discardableResult

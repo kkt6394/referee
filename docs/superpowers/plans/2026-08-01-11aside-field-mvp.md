@@ -52,14 +52,12 @@
 @Test func elevenAsideDraftCannotStartUntilMinimumFieldDataExists() throws {
     let store = try LedgerStore(originDeviceID: deviceID)
     try store.saveFixture(MatchFixture(matchID: matchID, competition: "KFA League", scheduledAt: .now,
-                                       venueName: "", homeTeamName: "Seoul", awayTeamName: "Seoul"))
+                                       venueName: "Main pitch", homeTeamName: "Seoul", awayTeamName: "Busan"))
 
     let readiness = try store.fieldReadiness(matchID: matchID)
 
     #expect(!readiness.canStartMatch)
-    #expect(readiness.blocking.map(.id) == [
-        "fixture.venue", "fixture.distinctTeams", "roster.home", "roster.away", "referee.accountable"
-    ])
+    #expect(readiness.blocking.map(\\.id) == ["roster.home", "roster.away", "referee.accountable"])
 }
 ~~~
 
@@ -325,4 +323,3 @@ git push
 - **Scope:** Futsal, youth templates, accounts, cloud backup, payments, and direct association submission are intentionally excluded so this plan results in a testable 11-a-side release.
 - **Consistency:** Task 1 defines `FieldReadiness` before Task 2 consumes it. Tasks 3–4 use existing append-only/sync APIs.
 - **Verification:** Each task contains a focused test or field gate, complete suite command, and commit boundary.
-

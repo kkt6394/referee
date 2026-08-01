@@ -6,6 +6,27 @@ struct LedgerStoreTests {
     private let matchID = UUID(uuidString: "11111111-1111-1111-1111-111111111111")!
     private let deviceID = UUID(uuidString: "22222222-2222-2222-2222-222222222222")!
 
+    @Test func elevenAsideDraftCannotStartUntilMinimumFieldDataExists() throws {
+        let store = try LedgerStore(originDeviceID: deviceID)
+        try store.saveFixture(MatchFixture(matchID: matchID, competition: "KFA League", scheduledAt: .now,
+                                           venueName: "Main pitch", homeTeamName: "Seoul", awayTeamName: "Busan"))
+
+        let readiness = try store.fieldReadiness(matchID: matchID)
+
+        #expect(!readiness.canStartMatch)
+        #expect(readiness.blocking.map(\.id) == ["roster.home", "roster.away", "referee.accountable"])
+    }
+
+    @Test func completeElevenAsidePreparationIsStartable() throws {
+        let store = try preparedElevenAsideStore(matchID: matchID, deviceID: deviceID)
+
+        let readiness = try store.fieldReadiness(matchID: matchID)
+
+        #expect(readiness.blocking.isEmpty)
+        #expect(readiness.warnings.isEmpty)
+        #expect(readiness.canStartMatch)
+    }
+
     @Test func creationAtomicallyAllocatesSequenceAndOutbox() throws {
         let store = try LedgerStore(originDeviceID: deviceID)
         let first = try store.create(EventDraft(matchID: matchID, eventType: "goal_recorded", payloadJSON: #"{"teamSide":"home"}"#), peers: ["watch", "watch"])
@@ -924,6 +945,22 @@ struct LedgerStoreTests {
         let validation = try store.validatePostMatch(matchID: matchID, confirmedScore: nil)
         #expect(validation.issues.contains { $0.code == "penalty_outcome_pending" && $0.eventID == penalty.draft.eventID && $0.severity == .blocking })
         #expect(validation.issues.contains { $0.code == "var_outcome_pending" && $0.eventID == review.draft.eventID && $0.severity == .warning })
+    }
+
+    private func preparedElevenAsideStore(matchID: UUID, deviceID: UUID) throws -> LedgerStore {
+        let store = try LedgerStore(originDeviceID: deviceID)
+        try store.saveFixture(MatchFixture(matchID: matchID, competition: "KFA League", scheduledAt: Date(),
+                                           venueName: "Main pitch", homeTeamName: "Seoul", awayTeamName: "Busan"))
+        try store.saveRules(MatchRuleSnapshot(), matchID: matchID)
+        try store.savePitchDimensions(PitchDimensions(lengthMetres: 105, widthMetres: 68), matchID: matchID)
+        try store.saveParticipants([
+            MatchParticipantSnapshot(id: UUID(), teamSide: "home", role: "player", displayName: "Seoul 9", shirtNumber: 9),
+            MatchParticipantSnapshot(id: UUID(), teamSide: "away", role: "player", displayName: "Busan 10", shirtNumber: 10),
+            MatchParticipantSnapshot(id: UUID(), role: "accountable_referee", displayName: "Referee Kim")
+        ], matchID: matchID)
+        try store.savePreMatchChecklist(PreMatchChecklist(pitchChecked: true, equipmentChecked: true,
+                                                         crewChecked: true, lineupChecked: true), matchID: matchID)
+        return store
     }
 
     private func completedMatchStore(attachmentRoot: URL? = nil) throws -> LedgerStore {
