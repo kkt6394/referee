@@ -1,0 +1,687 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		11C6996150993E6CA66FE22C /* RefereeLedger in Frameworks */ = {isa = PBXBuildFile; productRef = B8040077601BD2F1AED30FAC /* RefereeLedger */; };
+		1E3B94EA5B5AD1BF320C1B43 /* RefereePhoneUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 993BA19B0FFC470C0EB3246B /* RefereePhoneUITests.swift */; };
+		1FA7A2D7559F7DD71B63F928 /* RefereeWatchUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3497CAFF82A9E3481F1C2629 /* RefereeWatchUITests.swift */; };
+		2F09B583CA7ABF0D3AB16568 /* RefereeWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 0E3BDEB808933146621461CD /* RefereeWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		375BC2EF4D551DC0E5C43E3C /* ReportExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 526CC76B8DB7AF5A3500E78C /* ReportExport.swift */; };
+		AC9BE489C7D8C422A37DE124 /* RefereePhoneApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE8F9866B860DC68A6D0125A /* RefereePhoneApp.swift */; };
+		C5F452C69DDD1369CF21ADA5 /* RefereeWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76DF939A4B7775B6C81E7DC /* RefereeWatchApp.swift */; };
+		DE3FE42383C9998C4BE4C2D3 /* RefereeLedger in Frameworks */ = {isa = PBXBuildFile; productRef = 08D7BDAC2E40FD2366A2A700 /* RefereeLedger */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		08F3A9CDCC1FA67C8A108C74 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 94B42DCD84607AA954AD077E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D1DB4FB2312BCB2D4E78AB1B;
+			remoteInfo = RefereeWatch;
+		};
+		1812C3AA3EA41DDF472DB6D1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 94B42DCD84607AA954AD077E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D1DB4FB2312BCB2D4E78AB1B;
+			remoteInfo = RefereeWatch;
+		};
+		EA4F43CD64015E80BA1A1050 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 94B42DCD84607AA954AD077E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 09E50F0285E0495C96A7E913;
+			remoteInfo = RefereePhone;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		08CD179660AD5F7254E91862 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				2F09B583CA7ABF0D3AB16568 /* RefereeWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		08B4E1DAD97B839892052BA7 /* referee */ = {isa = PBXFileReference; lastKnownFileType = folder; name = referee; path = .; sourceTree = SOURCE_ROOT; };
+		0E3BDEB808933146621461CD /* RefereeWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RefereeWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3497CAFF82A9E3481F1C2629 /* RefereeWatchUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RefereeWatchUITests.swift; sourceTree = "<group>"; };
+		4096AF3FD4ADFA7126418D05 /* RefereePhoneUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = RefereePhoneUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		526CC76B8DB7AF5A3500E78C /* ReportExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportExport.swift; sourceTree = "<group>"; };
+		993BA19B0FFC470C0EB3246B /* RefereePhoneUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RefereePhoneUITests.swift; sourceTree = "<group>"; };
+		BAFC5810FFDA69629356E4E6 /* RefereeWatchUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RefereeWatchUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		BE8F9866B860DC68A6D0125A /* RefereePhoneApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RefereePhoneApp.swift; sourceTree = "<group>"; };
+		E76DF939A4B7775B6C81E7DC /* RefereeWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RefereeWatchApp.swift; sourceTree = "<group>"; };
+		F2C93AAFCB0F6D0AF2F24996 /* RefereePhone.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = RefereePhone.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		C2FEA8835AB1B12263117793 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DE3FE42383C9998C4BE4C2D3 /* RefereeLedger in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EF85320C319461397E19F8C2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				11C6996150993E6CA66FE22C /* RefereeLedger in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		2D43D15ADF6148B09F3603D9 = {
+			isa = PBXGroup;
+			children = (
+				330014313DCD38A2E514C2F6 /* iPhone */,
+				BA0624CE063D23F4BCDF26F3 /* Packages */,
+				AF7860A99F56C1FFD48FE4BD /* RefereePhoneUITests */,
+				DD3AD5712AE3B28555C2BF2F /* RefereeWatchUITests */,
+				8756E52F630E0D7B1301EDF8 /* Watch */,
+				C302E80903EB45C08B025CF0 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		330014313DCD38A2E514C2F6 /* iPhone */ = {
+			isa = PBXGroup;
+			children = (
+				BE8F9866B860DC68A6D0125A /* RefereePhoneApp.swift */,
+				526CC76B8DB7AF5A3500E78C /* ReportExport.swift */,
+			);
+			name = iPhone;
+			path = Apps/iPhone;
+			sourceTree = "<group>";
+		};
+		8756E52F630E0D7B1301EDF8 /* Watch */ = {
+			isa = PBXGroup;
+			children = (
+				E76DF939A4B7775B6C81E7DC /* RefereeWatchApp.swift */,
+			);
+			name = Watch;
+			path = Apps/Watch;
+			sourceTree = "<group>";
+		};
+		AF7860A99F56C1FFD48FE4BD /* RefereePhoneUITests */ = {
+			isa = PBXGroup;
+			children = (
+				993BA19B0FFC470C0EB3246B /* RefereePhoneUITests.swift */,
+			);
+			name = RefereePhoneUITests;
+			path = Tests/RefereePhoneUITests;
+			sourceTree = "<group>";
+		};
+		BA0624CE063D23F4BCDF26F3 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				08B4E1DAD97B839892052BA7 /* referee */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		C302E80903EB45C08B025CF0 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F2C93AAFCB0F6D0AF2F24996 /* RefereePhone.app */,
+				4096AF3FD4ADFA7126418D05 /* RefereePhoneUITests.xctest */,
+				0E3BDEB808933146621461CD /* RefereeWatch.app */,
+				BAFC5810FFDA69629356E4E6 /* RefereeWatchUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		DD3AD5712AE3B28555C2BF2F /* RefereeWatchUITests */ = {
+			isa = PBXGroup;
+			children = (
+				3497CAFF82A9E3481F1C2629 /* RefereeWatchUITests.swift */,
+			);
+			name = RefereeWatchUITests;
+			path = Tests/RefereeWatchUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		09E50F0285E0495C96A7E913 /* RefereePhone */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 817D24983654FF3E436B2D2A /* Build configuration list for PBXNativeTarget "RefereePhone" */;
+			buildPhases = (
+				025FDDC413DA3B8CA68B44C9 /* Sources */,
+				EF85320C319461397E19F8C2 /* Frameworks */,
+				08CD179660AD5F7254E91862 /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				71461975FA21ADB977D94C0E /* PBXTargetDependency */,
+			);
+			name = RefereePhone;
+			packageProductDependencies = (
+				B8040077601BD2F1AED30FAC /* RefereeLedger */,
+			);
+			productName = RefereePhone;
+			productReference = F2C93AAFCB0F6D0AF2F24996 /* RefereePhone.app */;
+			productType = "com.apple.product-type.application";
+		};
+		5DAFED0CFB0923444AC91B9E /* RefereePhoneUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 66C681082750DC5F44AA3BCC /* Build configuration list for PBXNativeTarget "RefereePhoneUITests" */;
+			buildPhases = (
+				D272F36096062CED6FEF0415 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AF6A24CAEEC8335A6F0A0011 /* PBXTargetDependency */,
+			);
+			name = RefereePhoneUITests;
+			packageProductDependencies = (
+			);
+			productName = RefereePhoneUITests;
+			productReference = 4096AF3FD4ADFA7126418D05 /* RefereePhoneUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		8F5A32ADBF2B9B533016C72F /* RefereeWatchUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B34AD83C639F5752DE5F148F /* Build configuration list for PBXNativeTarget "RefereeWatchUITests" */;
+			buildPhases = (
+				E36EFCD27B48D7D81C88230D /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				98DB066B8C720A94BC75BDD7 /* PBXTargetDependency */,
+			);
+			name = RefereeWatchUITests;
+			packageProductDependencies = (
+			);
+			productName = RefereeWatchUITests;
+			productReference = BAFC5810FFDA69629356E4E6 /* RefereeWatchUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		D1DB4FB2312BCB2D4E78AB1B /* RefereeWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2AE33DC7ECF06D699FA10504 /* Build configuration list for PBXNativeTarget "RefereeWatch" */;
+			buildPhases = (
+				A5E5E66A0C91C52F2DCB022A /* Sources */,
+				C2FEA8835AB1B12263117793 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = RefereeWatch;
+			packageProductDependencies = (
+				08D7BDAC2E40FD2366A2A700 /* RefereeLedger */,
+			);
+			productName = RefereeWatch;
+			productReference = 0E3BDEB808933146621461CD /* RefereeWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		94B42DCD84607AA954AD077E /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					09E50F0285E0495C96A7E913 = {
+						DevelopmentTeam = YC98G989ZF;
+					};
+					5DAFED0CFB0923444AC91B9E = {
+						DevelopmentTeam = YC98G989ZF;
+						TestTargetID = 09E50F0285E0495C96A7E913;
+					};
+					8F5A32ADBF2B9B533016C72F = {
+						DevelopmentTeam = YC98G989ZF;
+						TestTargetID = D1DB4FB2312BCB2D4E78AB1B;
+					};
+					D1DB4FB2312BCB2D4E78AB1B = {
+						DevelopmentTeam = YC98G989ZF;
+					};
+				};
+			};
+			buildConfigurationList = 44054E0CFE22F3DE0D0FC290 /* Build configuration list for PBXProject "Referee" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 2D43D15ADF6148B09F3603D9;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				68CE4F1082F070461F4A67C2 /* XCLocalSwiftPackageReference "." */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = C302E80903EB45C08B025CF0 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				09E50F0285E0495C96A7E913 /* RefereePhone */,
+				5DAFED0CFB0923444AC91B9E /* RefereePhoneUITests */,
+				D1DB4FB2312BCB2D4E78AB1B /* RefereeWatch */,
+				8F5A32ADBF2B9B533016C72F /* RefereeWatchUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		025FDDC413DA3B8CA68B44C9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AC9BE489C7D8C422A37DE124 /* RefereePhoneApp.swift in Sources */,
+				375BC2EF4D551DC0E5C43E3C /* ReportExport.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A5E5E66A0C91C52F2DCB022A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C5F452C69DDD1369CF21ADA5 /* RefereeWatchApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D272F36096062CED6FEF0415 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1E3B94EA5B5AD1BF320C1B43 /* RefereePhoneUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E36EFCD27B48D7D81C88230D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1FA7A2D7559F7DD71B63F928 /* RefereeWatchUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		71461975FA21ADB977D94C0E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D1DB4FB2312BCB2D4E78AB1B /* RefereeWatch */;
+			targetProxy = 1812C3AA3EA41DDF472DB6D1 /* PBXContainerItemProxy */;
+		};
+		98DB066B8C720A94BC75BDD7 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D1DB4FB2312BCB2D4E78AB1B /* RefereeWatch */;
+			targetProxy = 08F3A9CDCC1FA67C8A108C74 /* PBXContainerItemProxy */;
+		};
+		AF6A24CAEEC8335A6F0A0011 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 09E50F0285E0495C96A7E913 /* RefereePhone */;
+			targetProxy = EA4F43CD64015E80BA1A1050 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		09788E5E6CE0C1CFCB29EB64 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = YC98G989ZF;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.referee.app;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.referee.app.watchkitapp;
+				PRODUCT_NAME = "Referee Watch";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = Debug;
+		};
+		09E34CCCED1FB4E4A5845C0F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				WATCHOS_DEPLOYMENT_TARGET = 9.0;
+			};
+			name = Debug;
+		};
+		2EE265D793392266B9D3B581 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				DEVELOPMENT_TEAM = YC98G989ZF;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.referee.app.watchuitests;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_TARGET_NAME = RefereeWatch;
+			};
+			name = Release;
+		};
+		43F3A444EA9DD8DBEAE6DCD9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = YC98G989ZF;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.referee.app;
+				PRODUCT_NAME = Referee;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		4AAECFF3778C239FADEFA77E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				DEVELOPMENT_TEAM = YC98G989ZF;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.referee.app.watchuitests;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_TARGET_NAME = RefereeWatch;
+			};
+			name = Debug;
+		};
+		53776F0DB76BBDC425AF33BB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = YC98G989ZF;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.referee.app;
+				PRODUCT_NAME = Referee;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		73FA80057308927EC6F84BEA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				DEVELOPMENT_TEAM = YC98G989ZF;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.referee.app.uitests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = RefereePhone;
+			};
+			name = Release;
+		};
+		8CDBAF4BBABC5B371612C8C6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = YC98G989ZF;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.referee.app;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.referee.app.watchkitapp;
+				PRODUCT_NAME = "Referee Watch";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = Release;
+		};
+		94097F6472F97A92AB2AF2AB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				WATCHOS_DEPLOYMENT_TARGET = 9.0;
+			};
+			name = Release;
+		};
+		BB1C8B1F356C7B3AB7B21784 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				DEVELOPMENT_TEAM = YC98G989ZF;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.referee.app.uitests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = RefereePhone;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		2AE33DC7ECF06D699FA10504 /* Build configuration list for PBXNativeTarget "RefereeWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				09788E5E6CE0C1CFCB29EB64 /* Debug */,
+				8CDBAF4BBABC5B371612C8C6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		44054E0CFE22F3DE0D0FC290 /* Build configuration list for PBXProject "Referee" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				09E34CCCED1FB4E4A5845C0F /* Debug */,
+				94097F6472F97A92AB2AF2AB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		66C681082750DC5F44AA3BCC /* Build configuration list for PBXNativeTarget "RefereePhoneUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BB1C8B1F356C7B3AB7B21784 /* Debug */,
+				73FA80057308927EC6F84BEA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		817D24983654FF3E436B2D2A /* Build configuration list for PBXNativeTarget "RefereePhone" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				43F3A444EA9DD8DBEAE6DCD9 /* Debug */,
+				53776F0DB76BBDC425AF33BB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		B34AD83C639F5752DE5F148F /* Build configuration list for PBXNativeTarget "RefereeWatchUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4AAECFF3778C239FADEFA77E /* Debug */,
+				2EE265D793392266B9D3B581 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		68CE4F1082F070461F4A67C2 /* XCLocalSwiftPackageReference "." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = .;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		08D7BDAC2E40FD2366A2A700 /* RefereeLedger */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = RefereeLedger;
+		};
+		B8040077601BD2F1AED30FAC /* RefereeLedger */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = RefereeLedger;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 94B42DCD84607AA954AD077E /* Project object */;
+}

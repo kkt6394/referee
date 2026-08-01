@@ -1,0 +1,89 @@
+name: Referee
+options:
+  bundleIdPrefix: com.referee
+  deploymentTarget:
+    iOS: 16.0
+    watchOS: 9.0
+packages:
+  RefereeLedger:
+    path: .
+targets:
+  RefereePhone:
+    type: application
+    platform: iOS
+    sources:
+      - path: Apps/iPhone
+    dependencies:
+      - package: RefereeLedger
+        product: RefereeLedger
+      # XcodeGen emits the Embed Watch Content phase for a watchOS app
+      # dependency, so the Watch app is installed with the iPhone app.
+      - target: RefereeWatch
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.referee.app
+        DEVELOPMENT_TEAM: YC98G989ZF
+        PRODUCT_NAME: Referee
+        MARKETING_VERSION: 1.0
+        CURRENT_PROJECT_VERSION: 2
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: 6.0
+  RefereeWatch:
+    type: application
+    platform: watchOS
+    sources:
+      - path: Apps/Watch
+    dependencies:
+      - package: RefereeLedger
+        product: RefereeLedger
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.referee.app.watchkitapp
+        DEVELOPMENT_TEAM: YC98G989ZF
+        INFOPLIST_KEY_WKCompanionAppBundleIdentifier: com.referee.app
+        PRODUCT_NAME: Referee Watch
+        MARKETING_VERSION: 1.0
+        CURRENT_PROJECT_VERSION: 2
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: 6.0
+  RefereePhoneUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: Tests/RefereePhoneUITests
+    dependencies:
+      - target: RefereePhone
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.referee.app.uitests
+        DEVELOPMENT_TEAM: YC98G989ZF
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: 6.0
+  RefereeWatchUITests:
+    type: bundle.ui-testing
+    platform: watchOS
+    sources:
+      - path: Tests/RefereeWatchUITests
+    dependencies:
+      - target: RefereeWatch
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.referee.app.watchuitests
+        DEVELOPMENT_TEAM: YC98G989ZF
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: 6.0
+schemes:
+  RefereePhone:
+    build:
+      targets:
+        RefereePhone: all
+    test:
+      targets:
+        - RefereePhoneUITests
+  RefereeWatch:
+    build:
+      targets:
+        RefereeWatch: all
+    test:
+      targets:
+        - RefereeWatchUITests
