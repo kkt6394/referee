@@ -344,7 +344,8 @@ struct RefereeCopy: Sendable {
             "Match action details completed": "경기 액션 상세 정보가 완료되었습니다", "Event reversed": "이벤트를 되돌렸습니다",
             "Event corrected": "이벤트를 수정했습니다", "Could not read the original event": "원본 이벤트를 읽을 수 없습니다",
             "Could not encode match action": "경기 액션을 인코딩할 수 없습니다", "Match is already complete": "경기가 이미 종료되었습니다",
-            "Attachment stored and checksum verified": "첨부 파일을 저장하고 체크섬을 확인했습니다"
+            "Attachment stored and checksum verified": "첨부 파일을 저장하고 체크섬을 확인했습니다",
+            "Watch session is not active": "Watch 세션이 활성 상태가 아닙니다"
         ]
         if let localized = exact[value] { return localized }
         let errorPrefixes = [

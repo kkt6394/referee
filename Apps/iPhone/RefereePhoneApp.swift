@@ -1056,6 +1056,7 @@ struct PhoneMatchControlView: View {
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
             let elapsed = match.elapsed(at: context.date)
+            let syncFailure = syncFailureForDisplay
             ScrollView {
             VStack(spacing: 20) {
                 HStack {
@@ -1065,14 +1066,14 @@ struct PhoneMatchControlView: View {
                 }
                 .font(.caption.weight(.semibold)).foregroundStyle(.secondary)
                 HStack(alignment: .top, spacing: 10) {
-                    Image(systemName: match.syncFailure != nil ? "exclamationmark.icloud" :
+                    Image(systemName: syncFailure != nil ? "exclamationmark.icloud" :
                             (match.pendingSyncCount == 0 ? "checkmark.icloud" : "arrow.triangle.2.circlepath.icloud"))
-                        .foregroundStyle(match.syncFailure != nil ? Color.red : (match.pendingSyncCount == 0 ? Color.green : Color.orange))
+                        .foregroundStyle(syncFailure != nil ? Color.red : (match.pendingSyncCount == 0 ? Color.green : Color.orange))
                     VStack(alignment: .leading, spacing: 2) {
                         Text(copy.syncStatus(peer: "Watch", reachable: match.isWatchReachable,
-                                             pending: match.pendingSyncCount, failed: match.syncFailure != nil))
+                                             pending: match.pendingSyncCount, failed: syncFailure != nil))
                             .font(.footnote.weight(.semibold))
-                        if let failure = match.syncFailure {
+                        if let failure = syncFailure {
                             Text(copy.statusMessage(failure)).font(.caption).foregroundStyle(.secondary)
                         } else if let synced = match.lastPeerSyncAt {
                             Text(copy.lastWatchContact(synced.formatted(date: .omitted, time: .shortened)))
@@ -1080,7 +1081,7 @@ struct PhoneMatchControlView: View {
                         }
                     }
                     Spacer()
-                    if match.pendingSyncCount > 0 || match.syncFailure != nil {
+                    if match.pendingSyncCount > 0 || syncFailure != nil {
                         Button(copy.retry) { match.retrySynchronization() }.font(.caption.weight(.semibold))
                     }
                 }
@@ -1167,6 +1168,14 @@ struct PhoneMatchControlView: View {
                     .presentationDetents([.medium])
             }
         }
+    }
+
+    private var syncFailureForDisplay: String? {
+#if DEBUG
+        ProcessInfo.processInfo.environment["REFEREE_UI_TEST_SYNC_FAILURE"] ?? match.syncFailure
+#else
+        match.syncFailure
+#endif
     }
 
     private func score(team: String, score: Int, color: Color) -> some View {

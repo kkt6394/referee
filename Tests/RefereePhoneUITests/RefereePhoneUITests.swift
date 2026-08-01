@@ -33,6 +33,16 @@ final class RefereePhoneUITests: XCTestCase {
     }
 
     @MainActor
+    func testKoreanLocalizesInactiveWatchSyncFailure() throws {
+        let app = launchSeededFixture(language: "ko", syncFailure: "Watch session is not active")
+        saveFixture(in: app)
+
+        XCTAssertTrue(app.descendants(matching: .any)["match.period.start"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["Watch 세션이 활성 상태가 아닙니다"].waitForExistence(timeout: 3))
+        XCTAssertFalse(app.staticTexts["Watch session is not active"].exists)
+    }
+
+    @MainActor
     func testIncompleteFixtureShowsBlockingReadinessBeforeLiveControl() throws {
         let app = XCUIApplication()
         app.launchEnvironment["REFEREE_UI_TEST_DATABASE"] = UUID().uuidString
@@ -137,11 +147,12 @@ final class RefereePhoneUITests: XCTestCase {
     }
 
     @MainActor
-    private func launchSeededFixture(language: String = "en") -> XCUIApplication {
+    private func launchSeededFixture(language: String = "en", syncFailure: String? = nil) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchEnvironment["REFEREE_UI_TEST_DATABASE"] = UUID().uuidString
         app.launchEnvironment["REFEREE_UI_TEST_SEED"] = "fixture"
         app.launchEnvironment["REFEREE_UI_TEST_LANGUAGE"] = language
+        if let syncFailure { app.launchEnvironment["REFEREE_UI_TEST_SYNC_FAILURE"] = syncFailure }
         app.launch()
         app.buttons["matches.create"].tap()
         XCTAssertEqual(app.textFields["fixture.competition"].value as? String, "KFA UI League")
