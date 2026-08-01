@@ -13,6 +13,7 @@
 		1FA7A2D7559F7DD71B63F928 /* RefereeWatchUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3497CAFF82A9E3481F1C2629 /* RefereeWatchUITests.swift */; };
 		2F09B583CA7ABF0D3AB16568 /* RefereeWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 0E3BDEB808933146621461CD /* RefereeWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		375BC2EF4D551DC0E5C43E3C /* ReportExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 526CC76B8DB7AF5A3500E78C /* ReportExport.swift */; };
+		3D7038D6274E291D97C6DF0E /* RefereeTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D474D3797435132E5F90778F /* RefereeTheme.swift */; };
 		7010A684F4F92F04FF9682CB /* RefereeCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08F095F9092ED324FE60C553 /* RefereeCopy.swift */; };
 		AC9BE489C7D8C422A37DE124 /* RefereePhoneApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE8F9866B860DC68A6D0125A /* RefereePhoneApp.swift */; };
 		C5F452C69DDD1369CF21ADA5 /* RefereeWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76DF939A4B7775B6C81E7DC /* RefereeWatchApp.swift */; };
@@ -67,6 +68,7 @@
 		993BA19B0FFC470C0EB3246B /* RefereePhoneUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RefereePhoneUITests.swift; sourceTree = "<group>"; };
 		BAFC5810FFDA69629356E4E6 /* RefereeWatchUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RefereeWatchUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE8F9866B860DC68A6D0125A /* RefereePhoneApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RefereePhoneApp.swift; sourceTree = "<group>"; };
+		D474D3797435132E5F90778F /* RefereeTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RefereeTheme.swift; sourceTree = "<group>"; };
 		E76DF939A4B7775B6C81E7DC /* RefereeWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RefereeWatchApp.swift; sourceTree = "<group>"; };
 		F2C93AAFCB0F6D0AF2F24996 /* RefereePhone.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = RefereePhone.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -108,6 +110,7 @@
 			isa = PBXGroup;
 			children = (
 				BE8F9866B860DC68A6D0125A /* RefereePhoneApp.swift */,
+				D474D3797435132E5F90778F /* RefereeTheme.swift */,
 				526CC76B8DB7AF5A3500E78C /* ReportExport.swift */,
 			);
 			name = iPhone;
@@ -305,6 +308,7 @@
 			files = (
 				02B0BE56625E67A1CE929B82 /* RefereeCopy.swift in Sources */,
 				AC9BE489C7D8C422A37DE124 /* RefereePhoneApp.swift in Sources */,
+				3D7038D6274E291D97C6DF0E /* RefereeTheme.swift in Sources */,
 				375BC2EF4D551DC0E5C43E3C /* ReportExport.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

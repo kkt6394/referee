@@ -19,22 +19,31 @@ records. Both devices must continue to work offline.
 
 ## iPhone screen inventory
 
+The iPhone pre/post-match path uses a bright grouped-card presentation backed
+by semantic background, surface, status, spacing, radius, and typography
+tokens. Each stage has one visually primary action: create on the match list,
+create/save the fixture, open match control after readiness, and sign the
+reviewed report. Secondary save, timeline, setup, and export actions remain
+available without competing with that stage action. Team names and kit-color
+accents, readiness, and sync state stay visible on match control; none relies
+on color alone for meaning.
+
 | ID | Screen | Primary purpose | MVP actions |
 | --- | --- | --- | --- |
-| I-01 | Match list | Find, resume, or create a match | Create match; open draft/live/completed match; show local/sync status |
-| I-02 | Create match | Enter the minimum fixture data | Competition, date/time, venue, home and away teams; save draft |
-| I-03 | Match setup hub | Complete pre-match requirements | Open fixture, crew, teams, rules, venue, and checklist; show completion state |
+| I-01 | Match list | Find, resume, or create a match | Primary Create match card; open draft/live/completed match; show local/sync status |
+| I-02 | Create match | Enter the minimum fixture data | Grouped fixture card for competition, date/time, venue, home and away teams; primary create/save action |
+| I-03 | Match setup hub | Complete pre-match requirements | Grouped preparation and readiness cards; visible kit accents; open fixture, crew, teams, rules, venue, and checklist; primary Open match control action |
 | I-04 | Teams and lineups | Load or enter participants | Add players/officials; select starters; shirt number; captain; goalkeeper |
 | I-05 | Crew and rules | Establish official context | Assign crew roles; set half length, extra time, penalties, substitutions, temporary dismissals, youth options |
 | I-06 | Venue and pitch | Store dimensions and prepare location capture | Venue profile; length/width/orientation; grid snap; preview regions |
 | I-07 | Pre-match checklist | Confirm readiness | Mark pitch, equipment, crew, lineup, and operational checks; add notes |
-| I-08 | Match control | iPhone fallback live operation and Watch companion | Start/hold-to-confirm period controls; score; added time; Watch connection/sync state; open timeline |
+| I-08 | Match control | iPhone fallback live operation and Watch companion | Visible readiness, team kit accents, and Watch sync cards; start/hold-to-confirm period controls; score; added time; open timeline and review |
 | I-09 | Quick event sheet | Record or enrich an event | Goal, foul, card, substitution, injury, penalty, VAR, restart; timestamp defaults to current clock |
 | I-10 | Pitch-map detail | Record spatial foul/event location | Tap snapped location; adjust; confirm accuracy/capture method; show derived pitch region |
 | I-11 | Timeline and event detail | Review and correct the match record | Filter; inspect event; complete missing fields; append correction/reversal with reason |
 | I-12 | Period transition | Referee-confirmed boundary workflow | Confirm half/full time; enter added-time explanation; start next period or penalties |
-| I-13 | Post-match review | Resolve report-readiness issues | Mandatory-field checklist; timeline warnings; confirm final score and cards |
-| I-14 | Reports | Produce official report drafts | Match/referee/incident drafts; edit report fields; PDF/spreadsheet export; sign-off |
+| I-13 | Post-match review | Resolve report-readiness issues | Grouped review cards; mandatory-field checklist; timeline warnings; confirm final score and cards |
+| I-14 | Reports | Produce official report drafts | Match/referee/incident drafts; edit report fields; primary sign-off action; PDF/spreadsheet export |
 | I-15 | History and sync | Audit and recovery support | Per-event edit history; attachment status; retry sync; export/share approved files |
 
 ### iPhone navigation

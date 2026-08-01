@@ -62,6 +62,20 @@ final class RefereePhoneUITests: XCTestCase {
     }
 
     @MainActor
+    func testMatchControlShowsReadinessKitAccentsSyncAndReviewEntry() throws {
+        let app = launchSeededFixture(language: "en")
+        saveFixture(in: app)
+
+        XCTAssertTrue(app.descendants(matching: .any)["match.readiness"].waitForExistence(timeout: 3))
+        XCTAssertEqual(app.descendants(matching: .any)["match.homeKitAccent"].label, "Seoul, Red")
+        XCTAssertEqual(app.descendants(matching: .any)["match.awayKitAccent"].label, "Busan, Blue")
+        XCTAssertTrue(app.descendants(matching: .any)["match.syncStatus"].exists)
+
+        let review = scrollToElement(app.buttons["match.review"], in: app)
+        XCTAssertTrue(review.exists)
+    }
+
+    @MainActor
     func testCreateFixtureAndRecordLiveActions() throws {
         let app = launchSeededFixture()
         saveFixture(in: app)

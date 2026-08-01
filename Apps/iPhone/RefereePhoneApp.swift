@@ -807,10 +807,17 @@ struct PhoneRootView: View {
         NavigationStack {
             List {
                 Section {
-                    Button(copy.createMatch, systemImage: "plus.circle.fill") {
+                    Button {
                         match.createMatch()
                         showingCreate = true
+                    } label: {
+                        Label(copy.createMatch, systemImage: "plus.circle.fill")
+                            .font(RefereeTheme.Typography.status)
+                            .frame(maxWidth: .infinity)
                     }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .listRowBackground(Color.clear)
                     .accessibilityIdentifier("matches.create")
                 }
                 Section(copy.resumeMatch) {
@@ -822,11 +829,18 @@ struct PhoneRootView: View {
                             match.resumeMatch(fixture)
                             showingControl = true
                         } label: {
-                            VStack(alignment: .leading) {
-                                Text("\(fixture.homeTeamName) vs \(fixture.awayTeamName)").font(.headline)
+                            VStack(alignment: .leading, spacing: RefereeTheme.Spacing.compact) {
+                                HStack(spacing: RefereeTheme.Spacing.standard) {
+                                    Circle().fill(Color(hex: fixture.homeTeamColor ?? "#D32F2F")).frame(width: 10, height: 10)
+                                    Text(fixture.homeTeamName).font(RefereeTheme.Typography.section)
+                                    Text("–").foregroundStyle(RefereeTheme.Colors.secondaryText)
+                                    Circle().fill(Color(hex: fixture.awayTeamColor ?? "#1565C0")).frame(width: 10, height: 10)
+                                    Text(fixture.awayTeamName).font(RefereeTheme.Typography.section)
+                                }
                                 Text("\(fixture.competition) · \(fixture.scheduledAt.formatted(date: .abbreviated, time: .shortened))")
-                                    .font(.caption).foregroundStyle(.secondary)
+                                    .font(.caption).foregroundStyle(RefereeTheme.Colors.secondaryText)
                             }
+                            .padding(.vertical, RefereeTheme.Spacing.compact)
                         }
                     }
                 }
@@ -844,6 +858,7 @@ struct PhoneRootView: View {
                     .accessibilityIdentifier("settings.language")
                 }
             }
+            .refereeGroupedSurface()
             .navigationTitle(copy.matches)
             .navigationDestination(isPresented: $showingCreate) { PhoneFixtureView() }
             .navigationDestination(isPresented: $showingControl) { PhoneMatchControlView() }
@@ -864,7 +879,7 @@ private struct PhoneFixtureView: View {
 
     var body: some View {
         Form {
-            Section(copy.fixture) {
+            Section {
                 TextField(copy.competition, text: $match.competition)
                     .accessibilityIdentifier("fixture.competition")
                 DatePicker(copy.kickOff, selection: $match.scheduledAt)
@@ -874,10 +889,14 @@ private struct PhoneFixtureView: View {
                     .accessibilityIdentifier("fixture.homeTeam")
                 TextField(copy.awayTeam, text: $match.awayTeam)
                     .accessibilityIdentifier("fixture.awayTeam")
+            } header: {
+                Label(copy.fixture, systemImage: "sportscourt.fill")
+                    .font(RefereeTheme.Typography.section)
             }
             Section {
                 Text(copy.fixtureGuidance)
-                    .font(.callout).foregroundStyle(.secondary)
+                    .font(RefereeTheme.Typography.supporting)
+                    .foregroundStyle(RefereeTheme.Colors.secondaryText)
             }
             Section {
                 Button(copy.createMatch) {
@@ -887,10 +906,15 @@ private struct PhoneFixtureView: View {
                         showingSetup = true
                     }
                 }
-                    .disabled(!match.fixtureDetailsValid)
-                    .accessibilityIdentifier("fixture.save")
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .frame(maxWidth: .infinity)
+                .disabled(!match.fixtureDetailsValid)
+                .accessibilityIdentifier("fixture.save")
             }
+            .listRowBackground(Color.clear)
         }
+        .refereeGroupedSurface()
         .navigationTitle(copy.createMatch)
         .navigationDestination(isPresented: $showingSetup) { PhoneMatchSetupView() }
         .navigationDestination(isPresented: $showingControl) { PhoneMatchControlView() }
@@ -918,32 +942,51 @@ private struct PhoneMatchSetupView: View {
                 setupRow(copy.competitionRules, complete: true,
                          detail: match.extraTimeEnabled ? copy.extraTimeEnabled : copy.standardPeriods)
             }
+
+            Section(copy.teamKitColors) {
+                kitAccent(team: match.homeTeam, colorHex: match.homeTeamColor,
+                          identifier: "setup.homeKitAccent")
+                kitAccent(team: match.awayTeam, colorHex: match.awayTeamColor,
+                          identifier: "setup.awayKitAccent")
+            }
+
             Section {
-                if let readiness = match.fieldReadiness {
-                    if !readiness.blocking.isEmpty {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(copy.completeBeforeStarting)
-                                .font(.headline).foregroundStyle(.red)
-                                .accessibilityIdentifier("setup.readiness.blocking")
-                            ForEach(readiness.blocking) { issue in
-                                Text("• \(copy.readinessIssueTitle(id: issue.id, fallback: issue.title))").font(.caption).foregroundStyle(.red)
+                VStack(alignment: .leading, spacing: RefereeTheme.Spacing.standard) {
+                    if let readiness = match.fieldReadiness {
+                        if !readiness.blocking.isEmpty {
+                            VStack(alignment: .leading, spacing: RefereeTheme.Spacing.compact) {
+                                Label(copy.completeBeforeStarting, systemImage: "xmark.octagon.fill")
+                                    .font(RefereeTheme.Typography.section)
+                                    .foregroundStyle(RefereeTheme.Colors.blocking)
+                                    .accessibilityIdentifier("setup.readiness.blocking")
+                                ForEach(readiness.blocking) { issue in
+                                    Text("• \(copy.readinessIssueTitle(id: issue.id, fallback: issue.title))")
+                                        .font(.caption).foregroundStyle(RefereeTheme.Colors.blocking)
+                                }
+                            }
+                        }
+                        if !readiness.warnings.isEmpty {
+                            VStack(alignment: .leading, spacing: RefereeTheme.Spacing.compact) {
+                                Label(copy.recommendedBeforeKickOff, systemImage: "exclamationmark.triangle.fill")
+                                    .font(RefereeTheme.Typography.section)
+                                    .foregroundStyle(RefereeTheme.Colors.warning)
+                                    .accessibilityIdentifier("setup.readiness.warning")
+                                ForEach(readiness.warnings) { issue in
+                                    Text("• \(copy.readinessIssueTitle(id: issue.id, fallback: issue.title))")
+                                        .font(.caption).foregroundStyle(RefereeTheme.Colors.warning)
+                                }
                             }
                         }
                     }
-                    if !readiness.warnings.isEmpty {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(copy.recommendedBeforeKickOff)
-                                .font(.headline).foregroundStyle(.orange)
-                                .accessibilityIdentifier("setup.readiness.warning")
-                            ForEach(readiness.warnings) { issue in
-                                Text("• \(copy.readinessIssueTitle(id: issue.id, fallback: issue.title))").font(.caption).foregroundStyle(.orange)
-                            }
-                        }
-                    }
+                    Text(copy.readinessGuidance)
+                        .font(RefereeTheme.Typography.supporting)
+                        .foregroundStyle(RefereeTheme.Colors.secondaryText)
                 }
-                Text(copy.readinessGuidance)
-                    .font(.callout).foregroundStyle(.secondary)
+                .accessibilityElement(children: .contain)
+                .accessibilityIdentifier("match.readiness")
+
                 Button(copy.savePreparation) { _ = match.saveFixtureDraft() }
+                    .buttonStyle(.bordered)
                     .accessibilityIdentifier("setup.save")
                 Button(copy.openMatchControl) {
                     if match.saveFixtureDraft() { showingControl = true }
@@ -954,6 +997,7 @@ private struct PhoneMatchSetupView: View {
             }
             if let message = match.saveMessage { Text(copy.statusMessage(message)).font(.footnote).foregroundStyle(.secondary) }
         }
+        .refereeGroupedSurface()
         .navigationTitle(copy.matchSetup)
         .navigationDestination(isPresented: $showingControl) { PhoneMatchControlView() }
     }
@@ -964,6 +1008,18 @@ private struct PhoneMatchSetupView: View {
                 .foregroundStyle(complete ? Color.green : Color.orange)
             VStack(alignment: .leading) { Text(title); Text(detail).font(.caption).foregroundStyle(.secondary) }
         }
+    }
+
+    private func kitAccent(team: String, colorHex: String, identifier: String) -> some View {
+        HStack(spacing: RefereeTheme.Spacing.standard) {
+            Circle().fill(Color(hex: colorHex)).frame(width: 16, height: 16)
+            Text(team).font(RefereeTheme.Typography.status)
+            Spacer()
+            Text(copy.kitColorName(colorHex)).foregroundStyle(RefereeTheme.Colors.secondaryText)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(team), \(copy.kitColorName(colorHex))")
+        .accessibilityIdentifier(identifier)
     }
 }
 
@@ -1023,6 +1079,7 @@ private struct PhoneSetupDetailsView: View {
                     .accessibilityIdentifier("setup.details.save")
             }
         }
+        .refereeGroupedSurface()
         .navigationTitle(startAtChecklist ? copy.checklist : copy.setupDetails)
     }
 
@@ -1058,13 +1115,30 @@ struct PhoneMatchControlView: View {
             let elapsed = match.elapsed(at: context.date)
             let syncFailure = syncFailureForDisplay
             ScrollView {
-            VStack(spacing: 20) {
+            VStack(spacing: RefereeTheme.Spacing.comfortable) {
                 HStack {
                     Label(copy.periodLabel(match.periodLabel), systemImage: match.activePeriodID == nil ? "pause.circle" : "record.circle")
                     Spacer()
-                    Text(copy.localSave).font(.caption2.weight(.bold)).foregroundStyle(.green)
+                    Text(copy.localSave).font(.caption2.weight(.bold)).foregroundStyle(RefereeTheme.Colors.success)
                 }
-                .font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                .font(.caption.weight(.semibold)).foregroundStyle(RefereeTheme.Colors.secondaryText)
+
+                HStack(spacing: RefereeTheme.Spacing.standard) {
+                    Image(systemName: readinessIcon)
+                        .foregroundStyle(readinessColor)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(readinessTitle).font(RefereeTheme.Typography.status)
+                        Text(copy.readinessGuidance)
+                            .font(.caption)
+                            .foregroundStyle(RefereeTheme.Colors.secondaryText)
+                            .lineLimit(2)
+                    }
+                    Spacer()
+                }
+                .refereeCard(padding: RefereeTheme.Spacing.standard)
+                .accessibilityElement(children: .contain)
+                .accessibilityIdentifier("match.readiness")
+
                 HStack(alignment: .top, spacing: 10) {
                     Image(systemName: syncFailure != nil ? "exclamationmark.icloud" :
                             (match.pendingSyncCount == 0 ? "checkmark.icloud" : "arrow.triangle.2.circlepath.icloud"))
@@ -1085,14 +1159,22 @@ struct PhoneMatchControlView: View {
                         Button(copy.retry) { match.retrySynchronization() }.font(.caption.weight(.semibold))
                     }
                 }
-                .padding(10).background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                Text(clock(elapsed)).font(.system(size: 64, weight: .bold, design: .rounded)).monospacedDigit()
+                .padding(RefereeTheme.Spacing.standard)
+                .background(RefereeTheme.Colors.surface,
+                            in: RoundedRectangle(cornerRadius: RefereeTheme.CornerRadius.control,
+                                                 style: .continuous))
+                .accessibilityElement(children: .contain)
+                .accessibilityIdentifier("match.syncStatus")
+
+                Text(clock(elapsed)).font(RefereeTheme.Typography.hero).monospacedDigit()
                 HStack {
-                    score(team: match.homeTeam, score: match.homeScore, color: Color(hex: match.homeTeamColor))
+                    score(team: match.homeTeam, score: match.homeScore, colorHex: match.homeTeamColor,
+                          identifier: "match.homeKitAccent")
                     Text("–").font(.title)
-                    score(team: match.awayTeam, score: match.awayScore, color: Color(hex: match.awayTeamColor))
+                    score(team: match.awayTeam, score: match.awayScore, colorHex: match.awayTeamColor,
+                          identifier: "match.awayKitAccent")
                 }
-                .padding(14).background(.thinMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                .refereeCard()
                 if match.activePeriodID == nil {
                     Label(match.periodLabel == "FULL TIME" ? copy.matchComplete : copy.holdToStart(copy.periodLabel(match.periodLabel)), systemImage: "play.fill")
                         .font(.headline).padding().frame(maxWidth: .infinity)
@@ -1162,6 +1244,7 @@ struct PhoneMatchControlView: View {
             }
             .padding()
             }
+            .background(RefereeTheme.Colors.background)
             .navigationTitle(match.competition)
             .sheet(isPresented: $showingMoreActions) {
                 MorePhoneActionsView(elapsed: elapsed).environmentObject(match)
@@ -1178,9 +1261,31 @@ struct PhoneMatchControlView: View {
 #endif
     }
 
-    private func score(team: String, score: Int, color: Color) -> some View {
-        VStack { Text(team).lineLimit(1).foregroundStyle(color); Text("\(score)").font(.system(size: 48, weight: .bold, design: .rounded)).foregroundStyle(color) }
-            .frame(maxWidth: .infinity)
+    private var readinessTitle: String {
+        match.fieldReadiness?.canStartMatch == false ? copy.completeBeforeStarting : copy.ready
+    }
+
+    private var readinessIcon: String {
+        match.fieldReadiness?.canStartMatch == false ? "xmark.octagon.fill" : "checkmark.circle.fill"
+    }
+
+    private var readinessColor: Color {
+        match.fieldReadiness?.canStartMatch == false ? RefereeTheme.Colors.blocking : RefereeTheme.Colors.success
+    }
+
+    private func score(team: String, score: Int, colorHex: String, identifier: String) -> some View {
+        let color = Color(hex: colorHex)
+        return VStack(spacing: RefereeTheme.Spacing.compact) {
+            HStack(spacing: RefereeTheme.Spacing.compact) {
+                Circle().fill(color).frame(width: 12, height: 12)
+                Text(team).lineLimit(1).foregroundStyle(RefereeTheme.Colors.primaryText)
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(team), \(copy.kitColorName(colorHex))")
+            .accessibilityIdentifier(identifier)
+            Text("\(score)").font(.system(size: 48, weight: .bold, design: .rounded)).foregroundStyle(color)
+        }
+        .frame(maxWidth: .infinity)
     }
 
     private func quickAction(title: String, subtitle: String, icon: String, tint: Color, action: @escaping () -> Void) -> some View {
@@ -1399,6 +1504,9 @@ private struct PhonePostMatchReviewView: View {
                 Button(copy.sign(copy.reportKindName(reportKind.rawValue)), systemImage: "signature") {
                     showingSignConfirmation = true
                 }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .frame(maxWidth: .infinity)
                 .disabled(!canSign || selectedDocument == nil)
                 .accessibilityIdentifier("report.sign")
             } footer: {
@@ -1432,6 +1540,7 @@ private struct PhonePostMatchReviewView: View {
                 }
             }
         }
+        .refereeGroupedSurface()
         .navigationTitle(copy.postMatchReview)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { refresh() }
