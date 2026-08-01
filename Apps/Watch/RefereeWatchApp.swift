@@ -18,15 +18,27 @@ struct RefereeWatchApp: App {
     @StateObject private var match = WatchMatchStore()
     @AppStorage("referee.app.language") private var languageCode = AppLanguage.korean.rawValue
 
+    init() {
+#if DEBUG
+        if let rawValue = ProcessInfo.processInfo.environment["REFEREE_WATCH_UI_TEST_LANGUAGE"],
+           let language = AppLanguage(rawValue: rawValue) {
+            AppLanguageStore(userDefaults: .standard).set(language)
+        }
+#endif
+    }
+
     var body: some Scene {
         WindowGroup {
             NavigationStack {
                 WatchMatchHomeView()
             }
             .environmentObject(match)
-            .environment(\.locale, Locale(identifier: AppLanguage(rawValue: languageCode)?.rawValue ?? AppLanguage.korean.rawValue))
+            .environment(\.locale, Locale(identifier: language.rawValue))
+            .environment(\.refereeCopy, RefereeCopy(language: language))
         }
     }
+
+    private var language: AppLanguage { AppLanguage(rawValue: languageCode) ?? .korean }
 }
 
 @MainActor
@@ -385,7 +397,20 @@ final class WatchMatchStore: NSObject, ObservableObject, WCSessionDelegate {
     }
     nonisolated func session(_ session: WCSession, didReceiveMessage message: [String : Any]) { if let data = message["referee.sync"] as? Data { Task { @MainActor in self.receiveTransport(data) } } }
     nonisolated func session(_ session: WCSession, didReceiveUserInfo userInfo: [String : Any] = [:]) { if let data = userInfo["referee.sync"] as? Data { Task { @MainActor in self.receiveTransport(data) } } }
-    nonisolated func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String : Any]) { if let data = applicationContext["referee.matchPackage"] as? Data { Task { @MainActor in if let package = try? JSONDecoder().decode(MatchPackage.self, from: data) { self.install(package, from: Self.applicationContextPeerID) } } } }
+    nonisolated func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String : Any]) {
+        let languageRawValue = applicationContext["referee.app.language"] as? String
+        let packageData = applicationContext["referee.matchPackage"] as? Data
+        Task { @MainActor in
+            if let rawValue = languageRawValue,
+               let language = AppLanguage(rawValue: rawValue) {
+                AppLanguageStore(userDefaults: .standard).set(language)
+            }
+            if let data = packageData,
+               let package = try? JSONDecoder().decode(MatchPackage.self, from: data) {
+                self.install(package, from: Self.applicationContextPeerID)
+            }
+        }
+    }
 }
 
 private struct WatchTransportMessage: Codable {
@@ -398,6 +423,7 @@ private struct WatchTransportMessage: Codable {
 
 struct WatchMatchHomeView: View {
     @EnvironmentObject private var match: WatchMatchStore
+    @Environment(\.refereeCopy) private var copy
     @State private var selectedAction: QuickAction?
 
     private enum QuickAction {
@@ -413,7 +439,7 @@ struct WatchMatchHomeView: View {
             ScrollView(.vertical) {
                 VStack(spacing: 7) {
                 HStack {
-                    Text(match.periodLabel).font(.caption2.weight(.bold)).foregroundStyle(.secondary)
+                    Text(copy.periodLabel(match.periodLabel)).font(.caption2.weight(.bold)).foregroundStyle(.secondary)
                     Spacer()
                     Image(systemName: match.syncFailure != nil ? "exclamationmark.icloud" :
                             (match.pendingSyncCount == 0 ? "checkmark.icloud" : "arrow.triangle.2.circlepath"))
@@ -426,7 +452,7 @@ struct WatchMatchHomeView: View {
                     Text("\(match.awayScore)").foregroundStyle(Color(hex: match.awayTeamColor))
                 }.font(.title3.weight(.bold)).monospacedDigit()
                 if match.activePeriodID == nil {
-                    Label(match.periodLabel == "FULL TIME" ? "Match complete" : "Hold to start", systemImage: "play.fill")
+                    Label(match.periodLabel == "FULL TIME" ? copy.matchComplete : copy.holdToStart, systemImage: "play.fill")
                         .font(.caption.weight(.semibold)).foregroundStyle(.green)
                         .padding(.vertical, 6).frame(maxWidth: .infinity)
                         .background(.green.opacity(0.15), in: Capsule())
@@ -434,38 +460,38 @@ struct WatchMatchHomeView: View {
                         .disabled(match.periodLabel == "FULL TIME")
                 }
                 HStack(spacing: 6) {
-                    Button { selectedAction = .goal(elapsed) } label: { actionLabel("GOAL", icon: "soccerball", tint: .green) }
+                    Button { selectedAction = .goal(elapsed) } label: { actionLabel(copy.goal, icon: "soccerball", tint: .green) }
                         .buttonStyle(.plain)
                         .accessibilityIdentifier("watch.action.goal")
-                    Button { selectedAction = .foul(elapsed) } label: { actionLabel("FOUL", icon: "figure.soccer", tint: .orange) }
+                    Button { selectedAction = .foul(elapsed) } label: { actionLabel(copy.foul, icon: "figure.soccer", tint: .orange) }
                         .buttonStyle(.plain)
                         .accessibilityIdentifier("watch.action.foul")
                 }
                 .disabled(match.activePeriodID == nil || !match.hasMatchPackage)
                 HStack(spacing: 6) {
-                    Button { selectedAction = .card(elapsed) } label: { actionLabel("CARD", icon: "rectangle.fill", tint: .yellow) }
+                    Button { selectedAction = .card(elapsed) } label: { actionLabel(copy.card, icon: "rectangle.fill", tint: .yellow) }
                         .buttonStyle(.plain)
                         .accessibilityIdentifier("watch.action.card")
-                    Button { selectedAction = .more(elapsed) } label: { actionLabel("MORE", icon: "ellipsis", tint: .blue) }
+                    Button { selectedAction = .more(elapsed) } label: { actionLabel(copy.more, icon: "ellipsis", tint: .blue) }
                         .buttonStyle(.plain)
                 }
                 .disabled(match.activePeriodID == nil || !match.hasMatchPackage)
                 if match.activePeriodID != nil {
-                    Label("Hold to end period", systemImage: "stop.fill")
+                    Label(copy.holdToEndPeriod, systemImage: "stop.fill")
                         .font(.caption2.weight(.semibold)).foregroundStyle(.red)
                         .onLongPressGesture(minimumDuration: 1) { match.endCurrentPeriod(at: context.date) }
                 }
                     HStack(spacing: 4) {
-                        Text("\(match.status) · Queue \(match.pendingSyncCount)")
+                        Text("\(copy.syncStatus(peer: "iPhone", reachable: match.isPhoneReachable, pending: match.pendingSyncCount, failed: match.syncFailure != nil)) · \(copy.queueStatus(match.pendingSyncCount))")
                             .font(.caption2).foregroundStyle(match.syncFailure == nil ? Color.secondary : Color.red).lineLimit(2)
                             .accessibilityIdentifier("watch.sync.status")
                         if match.pendingSyncCount > 0 || match.syncFailure != nil {
                             Button { match.retrySynchronization() } label: { Image(systemName: "arrow.clockwise") }
-                                .buttonStyle(.plain).accessibilityLabel("Retry iPhone sync")
+                                .buttonStyle(.plain).accessibilityLabel(copy.retryPhoneSync)
                         }
                     }
-                    if let saveConfirmation = match.saveConfirmation {
-                        Text(saveConfirmation)
+                    if match.saveConfirmation != nil {
+                        Text(copy.savedLocally(queue: match.pendingSyncCount))
                             .font(.caption2.weight(.semibold)).foregroundStyle(.green)
                             .accessibilityIdentifier("watch.save.confirmation")
                     }
@@ -510,51 +536,54 @@ struct WatchMatchHomeView: View {
 private struct GoalActionView: View {
     @EnvironmentObject private var match: WatchMatchStore
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.refereeCopy) private var copy
     let matchClockMs: Int64
 
     var body: some View {
         List {
-            Section("Select scoring team") {
-                Button("\(match.homeTeamName) GOAL") { match.saveGoal(side: "home", matchClockMs: matchClockMs); dismiss() }
+            Section(copy.selectScoringTeam) {
+                Button(copy.teamGoal(match.homeTeamName)) { match.saveGoal(side: "home", matchClockMs: matchClockMs); dismiss() }
                     .accessibilityIdentifier("watch.goal.home")
                     .tint(Color(hex: match.homeTeamColor))
-                Button("\(match.awayTeamName) GOAL") { match.saveGoal(side: "away", matchClockMs: matchClockMs); dismiss() }
+                Button(copy.teamGoal(match.awayTeamName)) { match.saveGoal(side: "away", matchClockMs: matchClockMs); dismiss() }
                     .accessibilityIdentifier("watch.goal.away")
                     .tint(Color(hex: match.awayTeamColor))
             }
         }
-        .navigationTitle("Goal")
+        .navigationTitle(copy.goal)
     }
 }
 
 private struct FoulActionView: View {
     @EnvironmentObject private var match: WatchMatchStore
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.refereeCopy) private var copy
     let matchClockMs: Int64
 
     var body: some View {
         List {
-            Button("\(match.homeTeamName) FOUL") { match.saveFoul(side: "home", matchClockMs: matchClockMs); dismiss() }
+            Button(copy.teamFoul(match.homeTeamName)) { match.saveFoul(side: "home", matchClockMs: matchClockMs); dismiss() }
                 .accessibilityIdentifier("watch.foul.home")
-            Button("\(match.awayTeamName) FOUL") { match.saveFoul(side: "away", matchClockMs: matchClockMs); dismiss() }
+            Button(copy.teamFoul(match.awayTeamName)) { match.saveFoul(side: "away", matchClockMs: matchClockMs); dismiss() }
                 .accessibilityIdentifier("watch.foul.away")
         }
-        .navigationTitle("Foul")
+        .navigationTitle(copy.foul)
     }
 }
 
 private struct CardActionView: View {
     @EnvironmentObject private var match: WatchMatchStore
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.refereeCopy) private var copy
     let matchClockMs: Int64
 
     var body: some View {
         List {
-            Section("Yellow") {
+            Section(copy.yellow) {
                 Button(match.homeTeamName) { match.saveCard(side: "home", colour: "yellow", matchClockMs: matchClockMs); dismiss() }
                 Button(match.awayTeamName) { match.saveCard(side: "away", colour: "yellow", matchClockMs: matchClockMs); dismiss() }
             }
-            Section("Direct red — hold") {
+            Section(copy.directRedHold) {
                 Text(match.homeTeamName)
                     .frame(maxWidth: .infinity, minHeight: 36)
                     .contentShape(Rectangle())
@@ -567,33 +596,34 @@ private struct CardActionView: View {
                     .accessibilityIdentifier("watch.card.red.away")
             }
         }
-        .navigationTitle("Card")
+        .navigationTitle(copy.card)
     }
 }
 
 private struct MoreActionView: View {
     @EnvironmentObject private var match: WatchMatchStore
+    @Environment(\.refereeCopy) private var copy
     let matchClockMs: Int64
 
     var body: some View {
         List {
-            Section("Match events") {
-                Button("HOME PENALTY") { match.savePenalty(side: "home", matchClockMs: matchClockMs) }
-                Button("AWAY PENALTY") { match.savePenalty(side: "away", matchClockMs: matchClockMs) }
-                Button("VAR REVIEW") { match.saveVAR(matchClockMs: matchClockMs) }
+            Section(copy.matchEvents) {
+                Button(copy.homePenalty) { match.savePenalty(side: "home", matchClockMs: matchClockMs) }
+                Button(copy.awayPenalty) { match.savePenalty(side: "away", matchClockMs: matchClockMs) }
+                Button(copy.varReview) { match.saveVAR(matchClockMs: matchClockMs) }
             }
-            Section("Team action") {
-                Button("HOME SUB") { match.saveSubstitution(side: "home", matchClockMs: matchClockMs) }
-                Button("AWAY SUB") { match.saveSubstitution(side: "away", matchClockMs: matchClockMs) }
-                Button("INJURY") { match.saveInjury(side: nil, matchClockMs: matchClockMs) }
+            Section(copy.teamAction) {
+                Button(copy.homeSubstitution) { match.saveSubstitution(side: "home", matchClockMs: matchClockMs) }
+                Button(copy.awaySubstitution) { match.saveSubstitution(side: "away", matchClockMs: matchClockMs) }
+                Button(copy.injury) { match.saveInjury(side: nil, matchClockMs: matchClockMs) }
             }
-            Section("Interruption") {
-                Button("SUSPEND") { match.saveSuspension(state: .started, reason: "match_interruption", matchClockMs: matchClockMs) }
-                Button("RESUME") { match.saveSuspension(state: .resumed, reason: "match_interruption", matchClockMs: matchClockMs) }
-                Button("DROPPED BALL") { match.saveRestart(type: .droppedBall, matchClockMs: matchClockMs) }
-                Button("ADDED TIME") { match.saveStoppage(cause: "other", matchClockMs: matchClockMs) }
+            Section(copy.interruption) {
+                Button(copy.suspend) { match.saveSuspension(state: .started, reason: "match_interruption", matchClockMs: matchClockMs) }
+                Button(copy.resume) { match.saveSuspension(state: .resumed, reason: "match_interruption", matchClockMs: matchClockMs) }
+                Button(copy.droppedBall) { match.saveRestart(type: .droppedBall, matchClockMs: matchClockMs) }
+                Button(copy.addedTime) { match.saveStoppage(cause: "other", matchClockMs: matchClockMs) }
             }
         }
-        .navigationTitle("More")
+        .navigationTitle(copy.more)
     }
 }

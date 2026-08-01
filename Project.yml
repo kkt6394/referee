@@ -13,6 +13,7 @@ targets:
     platform: iOS
     sources:
       - path: Apps/iPhone
+      - path: Apps/Shared/RefereeCopy.swift
     dependencies:
       - package: RefereeLedger
         product: RefereeLedger
@@ -34,6 +35,7 @@ targets:
     platform: watchOS
     sources:
       - path: Apps/Watch
+      - path: Apps/Shared/RefereeCopy.swift
     dependencies:
       - package: RefereeLedger
         product: RefereeLedger

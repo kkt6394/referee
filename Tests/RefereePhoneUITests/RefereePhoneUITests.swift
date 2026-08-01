@@ -2,9 +2,29 @@ import XCTest
 
 final class RefereePhoneUITests: XCTestCase {
     @MainActor
+    func testSwitchesVisibleCopyFromKoreanToEnglish() throws {
+        let app = XCUIApplication()
+        app.launchEnvironment["REFEREE_UI_TEST_DATABASE"] = UUID().uuidString
+        app.launchEnvironment["REFEREE_UI_TEST_LANGUAGE"] = "ko"
+        app.launch()
+
+        XCTAssertTrue(app.navigationBars["경기"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.buttons["경기 생성"].exists)
+
+        let language = app.buttons["settings.language"]
+        XCTAssertTrue(language.waitForExistence(timeout: 3))
+        language.tap()
+        app.buttons["English"].tap()
+
+        XCTAssertTrue(app.navigationBars["Matches"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.buttons["Create match"].exists)
+    }
+
+    @MainActor
     func testIncompleteFixtureShowsBlockingReadinessBeforeLiveControl() throws {
         let app = XCUIApplication()
         app.launchEnvironment["REFEREE_UI_TEST_DATABASE"] = UUID().uuidString
+        app.launchEnvironment["REFEREE_UI_TEST_LANGUAGE"] = "en"
         app.launch()
         app.buttons["matches.create"].tap()
         app.textFields["fixture.competition"].tap(); app.textFields["fixture.competition"].typeText("KFA League")
@@ -109,6 +129,7 @@ final class RefereePhoneUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchEnvironment["REFEREE_UI_TEST_DATABASE"] = UUID().uuidString
         app.launchEnvironment["REFEREE_UI_TEST_SEED"] = "fixture"
+        app.launchEnvironment["REFEREE_UI_TEST_LANGUAGE"] = "en"
         app.launch()
         app.buttons["matches.create"].tap()
         XCTAssertEqual(app.textFields["fixture.competition"].value as? String, "KFA UI League")

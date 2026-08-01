@@ -48,13 +48,25 @@ struct RefereePhoneApp: App {
     @StateObject private var match = PhoneMatchStore()
     @AppStorage("referee.app.language") private var languageCode = AppLanguage.korean.rawValue
 
+    init() {
+#if DEBUG
+        if let rawValue = ProcessInfo.processInfo.environment["REFEREE_UI_TEST_LANGUAGE"],
+           let language = AppLanguage(rawValue: rawValue) {
+            AppLanguageStore(userDefaults: .standard).set(language)
+        }
+#endif
+    }
+
     var body: some Scene {
         WindowGroup {
             PhoneRootView()
                 .environmentObject(match)
-                .environment(\.locale, Locale(identifier: AppLanguage(rawValue: languageCode)?.rawValue ?? AppLanguage.korean.rawValue))
+                .environment(\.locale, Locale(identifier: language.rawValue))
+                .environment(\.refereeCopy, RefereeCopy(language: language))
         }
     }
+
+    private var language: AppLanguage { AppLanguage(rawValue: languageCode) ?? .korean }
 }
 
 @MainActor
@@ -620,8 +632,16 @@ final class PhoneMatchStore: NSObject, ObservableObject, WCSessionDelegate {
 
     private func publishMatchPackage() {
         guard let ledger, let package = try? ledger.matchPackage(matchID: matchID), let data = try? JSONEncoder().encode(package) else { return }
-        try? session?.updateApplicationContext(["referee.matchPackage": data])
+        try? session?.updateApplicationContext([
+            "referee.matchPackage": data,
+            "referee.app.language": AppLanguageStore(userDefaults: .standard).language.rawValue
+        ])
         send(kind: "package", payload: data)
+    }
+
+    func updateAppLanguage(_ language: AppLanguage) {
+        AppLanguageStore(userDefaults: .standard).set(language)
+        publishMatchPackage()
     }
 
     func retrySynchronization() {
@@ -778,6 +798,8 @@ private struct WatchTransportMessage: Codable {
 
 struct PhoneRootView: View {
     @EnvironmentObject private var match: PhoneMatchStore
+    @Environment(\.refereeCopy) private var copy
+    @AppStorage("referee.app.language") private var languageCode = AppLanguage.korean.rawValue
     @State private var showingCreate = false
     @State private var showingControl = false
 
@@ -785,15 +807,15 @@ struct PhoneRootView: View {
         NavigationStack {
             List {
                 Section {
-                    Button("Create match", systemImage: "plus.circle.fill") {
+                    Button(copy.createMatch, systemImage: "plus.circle.fill") {
                         match.createMatch()
                         showingCreate = true
                     }
                     .accessibilityIdentifier("matches.create")
                 }
-                Section("Resume match") {
+                Section(copy.resumeMatch) {
                     if match.matches.isEmpty {
-                        Text("No saved matches yet").foregroundStyle(.secondary)
+                        Text(copy.noSavedMatches).foregroundStyle(.secondary)
                     }
                     ForEach(match.matches, id: \.matchID) { fixture in
                         Button {
@@ -808,38 +830,57 @@ struct PhoneRootView: View {
                         }
                     }
                 }
+                Section(copy.settings) {
+                    Menu {
+                        Button(copy.korean) { select(.korean) }
+                        Button(copy.english) { select(.english) }
+                    } label: {
+                        HStack {
+                            Label(copy.languageLabel, systemImage: "globe")
+                            Spacer()
+                            Text(copy.selectedLanguageName).foregroundStyle(.secondary)
+                        }
+                    }
+                    .accessibilityIdentifier("settings.language")
+                }
             }
-            .navigationTitle("Matches")
+            .navigationTitle(copy.matches)
             .navigationDestination(isPresented: $showingCreate) { PhoneFixtureView() }
             .navigationDestination(isPresented: $showingControl) { PhoneMatchControlView() }
         }
+    }
+
+    private func select(_ language: AppLanguage) {
+        match.updateAppLanguage(language)
+        languageCode = language.rawValue
     }
 }
 
 private struct PhoneFixtureView: View {
     @EnvironmentObject private var match: PhoneMatchStore
+    @Environment(\.refereeCopy) private var copy
     @State private var showingControl = false
     @State private var showingSetup = false
 
     var body: some View {
         Form {
-            Section("Fixture") {
-                TextField("Competition", text: $match.competition)
+            Section(copy.fixture) {
+                TextField(copy.competition, text: $match.competition)
                     .accessibilityIdentifier("fixture.competition")
-                DatePicker("Kick-off", selection: $match.scheduledAt)
-                TextField("Venue", text: $match.venue)
+                DatePicker(copy.kickOff, selection: $match.scheduledAt)
+                TextField(copy.venue, text: $match.venue)
                     .accessibilityIdentifier("fixture.venue")
-                TextField("Home team", text: $match.homeTeam)
+                TextField(copy.homeTeam, text: $match.homeTeam)
                     .accessibilityIdentifier("fixture.homeTeam")
-                TextField("Away team", text: $match.awayTeam)
+                TextField(copy.awayTeam, text: $match.awayTeam)
                     .accessibilityIdentifier("fixture.awayTeam")
             }
             Section {
-                Text("Create the match now. Crew, rosters, rules, pitch details, and readiness checks can be completed next or later.")
+                Text(copy.fixtureGuidance)
                     .font(.callout).foregroundStyle(.secondary)
             }
             Section {
-                Button("Create match") {
+                Button(copy.createMatch) {
                     if match.participantSetupComplete {
                         if match.saveFixture() { showingControl = true }
                     } else if match.saveFixtureDraft() {
@@ -850,7 +891,7 @@ private struct PhoneFixtureView: View {
                     .accessibilityIdentifier("fixture.save")
             }
         }
-        .navigationTitle("Create match")
+        .navigationTitle(copy.createMatch)
         .navigationDestination(isPresented: $showingSetup) { PhoneMatchSetupView() }
         .navigationDestination(isPresented: $showingControl) { PhoneMatchControlView() }
     }
@@ -858,51 +899,53 @@ private struct PhoneFixtureView: View {
 
 private struct PhoneMatchSetupView: View {
     @EnvironmentObject private var match: PhoneMatchStore
+    @Environment(\.refereeCopy) private var copy
     @State private var showingControl = false
 
     var body: some View {
         List {
-            Section("Preparation") {
+            Section(copy.preparation) {
                 NavigationLink { PhoneSetupDetailsView() } label: {
-                    setupRow("Crew and teams", complete: match.participantSetupComplete, detail: match.participantSetupComplete ? "Ready" : "Needs details")
+                    setupRow(copy.crewAndTeams, complete: match.participantSetupComplete,
+                             detail: match.participantSetupComplete ? copy.ready : copy.needsDetails)
                 }
                 NavigationLink { PhoneSetupDetailsView(startAtChecklist: true) } label: {
-                    setupRow("Pre-match checklist", complete: match.checklist.isComplete,
-                             detail: "\(match.checklist.completedCount) of 4 checked")
+                    setupRow(copy.preMatchChecklist, complete: match.checklist.isComplete,
+                             detail: copy.checkedCount(match.checklist.completedCount))
                 }
-                setupRow("Venue and pitch", complete: match.pitchSetupValid,
+                setupRow(copy.venueAndPitch, complete: match.pitchSetupValid,
                          detail: "\(match.pitchLengthMetres.formatted()) × \(match.pitchWidthMetres.formatted()) m")
-                setupRow("Competition rules", complete: true,
-                         detail: match.extraTimeEnabled ? "Extra time enabled" : "Standard periods")
+                setupRow(copy.competitionRules, complete: true,
+                         detail: match.extraTimeEnabled ? copy.extraTimeEnabled : copy.standardPeriods)
             }
             Section {
                 if let readiness = match.fieldReadiness {
                     if !readiness.blocking.isEmpty {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Complete before starting")
+                            Text(copy.completeBeforeStarting)
                                 .font(.headline).foregroundStyle(.red)
                                 .accessibilityIdentifier("setup.readiness.blocking")
                             ForEach(readiness.blocking) { issue in
-                                Text("• \(issue.title)").font(.caption).foregroundStyle(.red)
+                                Text("• \(copy.readinessIssueTitle(id: issue.id, fallback: issue.title))").font(.caption).foregroundStyle(.red)
                             }
                         }
                     }
                     if !readiness.warnings.isEmpty {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Recommended before kick-off")
+                            Text(copy.recommendedBeforeKickOff)
                                 .font(.headline).foregroundStyle(.orange)
                                 .accessibilityIdentifier("setup.readiness.warning")
                             ForEach(readiness.warnings) { issue in
-                                Text("• \(issue.title)").font(.caption).foregroundStyle(.orange)
+                                Text("• \(copy.readinessIssueTitle(id: issue.id, fallback: issue.title))").font(.caption).foregroundStyle(.orange)
                             }
                         }
                     }
                 }
-                Text("Required preparation blocks live control; warnings can be completed later, but report sign-off still validates mandatory details.")
+                Text(copy.readinessGuidance)
                     .font(.callout).foregroundStyle(.secondary)
-                Button("Save preparation") { _ = match.saveFixtureDraft() }
+                Button(copy.savePreparation) { _ = match.saveFixtureDraft() }
                     .accessibilityIdentifier("setup.save")
-                Button("Open match control") {
+                Button(copy.openMatchControl) {
                     if match.saveFixtureDraft() { showingControl = true }
                 }
                 .buttonStyle(.borderedProminent)
@@ -911,7 +954,7 @@ private struct PhoneMatchSetupView: View {
             }
             if let message = match.saveMessage { Text(message).font(.footnote).foregroundStyle(.secondary) }
         }
-        .navigationTitle("Match setup")
+        .navigationTitle(copy.matchSetup)
         .navigationDestination(isPresented: $showingControl) { PhoneMatchControlView() }
     }
 
@@ -926,6 +969,7 @@ private struct PhoneMatchSetupView: View {
 
 private struct PhoneSetupDetailsView: View {
     @EnvironmentObject private var match: PhoneMatchStore
+    @Environment(\.refereeCopy) private var copy
     let startAtChecklist: Bool
 
     init(startAtChecklist: Bool = false) { self.startAtChecklist = startAtChecklist }
@@ -933,69 +977,69 @@ private struct PhoneSetupDetailsView: View {
     var body: some View {
         Form {
             if !startAtChecklist {
-                Section("Rules") { Toggle("Extra time", isOn: $match.extraTimeEnabled) }
-                Section("Team kit colors") {
-                    Picker("Home kit", selection: $match.homeTeamColor) {
+                Section(copy.rules) { Toggle(copy.extraTime, isOn: $match.extraTimeEnabled) }
+                Section(copy.teamKitColors) {
+                    Picker(copy.homeKit, selection: $match.homeTeamColor) {
                         ForEach(TeamKitPalette.all) { option in
-                            Label(option.name, systemImage: "circle.fill").foregroundStyle(option.color).tag(option.id)
+                            Label(copy.kitColorName(option.id), systemImage: "circle.fill").foregroundStyle(option.color).tag(option.id)
                         }
                     }
-                    ColorPicker("Home custom color", selection: customColorBinding(for: $match.homeTeamColor), supportsOpacity: false)
-                    Picker("Away kit", selection: $match.awayTeamColor) {
+                    ColorPicker(copy.homeCustomColor, selection: customColorBinding(for: $match.homeTeamColor), supportsOpacity: false)
+                    Picker(copy.awayKit, selection: $match.awayTeamColor) {
                         ForEach(TeamKitPalette.all) { option in
-                            Label(option.name, systemImage: "circle.fill").foregroundStyle(option.color).tag(option.id)
+                            Label(copy.kitColorName(option.id), systemImage: "circle.fill").foregroundStyle(option.color).tag(option.id)
                         }
                     }
-                    ColorPicker("Away custom color", selection: customColorBinding(for: $match.awayTeamColor), supportsOpacity: false)
+                    ColorPicker(copy.awayCustomColor, selection: customColorBinding(for: $match.awayTeamColor), supportsOpacity: false)
                 }
-                Section("Pitch dimensions") {
+                Section(copy.pitchDimensions) {
                     HStack {
-                        TextField("Length", value: $match.pitchLengthMetres, format: .number.precision(.fractionLength(0...1)))
+                        TextField(copy.length, value: $match.pitchLengthMetres, format: .number.precision(.fractionLength(0...1)))
                             .keyboardType(.decimalPad)
                         Text("m ×").foregroundStyle(.secondary)
-                        TextField("Width", value: $match.pitchWidthMetres, format: .number.precision(.fractionLength(0...1)))
+                        TextField(copy.width, value: $match.pitchWidthMetres, format: .number.precision(.fractionLength(0...1)))
                             .keyboardType(.decimalPad)
                         Text("m").foregroundStyle(.secondary)
                     }
                 }
-                Section("Accountable referee") {
-                    TextField("Full name", text: $match.accountableReferee)
+                Section(copy.accountableReferee) {
+                    TextField(copy.fullName, text: $match.accountableReferee)
                         .accessibilityIdentifier("fixture.referee")
                 }
                 rosterSection(side: "home", title: match.homeTeam)
                 rosterSection(side: "away", title: match.awayTeam)
             }
-            Section("Pre-match checklist") {
-                Toggle("Pitch and field markings", isOn: $match.pitchChecked)
-                Toggle("Match balls and equipment", isOn: $match.equipmentChecked)
-                Toggle("Referee crew briefing", isOn: $match.crewChecked)
-                Toggle("Team sheets and lineups", isOn: $match.lineupChecked)
-                TextField("Operational notes", text: $match.checklistNotes, axis: .vertical)
+            Section(copy.preMatchChecklist) {
+                Toggle(copy.pitchAndMarkings, isOn: $match.pitchChecked)
+                Toggle(copy.matchBallsAndEquipment, isOn: $match.equipmentChecked)
+                Toggle(copy.refereeCrewBriefing, isOn: $match.crewChecked)
+                Toggle(copy.teamSheetsAndLineups, isOn: $match.lineupChecked)
+                TextField(copy.operationalNotes, text: $match.checklistNotes, axis: .vertical)
                     .lineLimit(2...5)
             }
             Section {
-                Button("Save preparation") { _ = match.saveFixtureDraft() }
+                Button(copy.savePreparation) { _ = match.saveFixtureDraft() }
                     .disabled(!match.pitchSetupValid)
                     .accessibilityIdentifier("setup.details.save")
             }
         }
-        .navigationTitle(startAtChecklist ? "Checklist" : "Setup details")
+        .navigationTitle(startAtChecklist ? copy.checklist : copy.setupDetails)
     }
 
     @ViewBuilder
     private func rosterSection(side: String, title: String) -> some View {
-        Section(title.isEmpty ? "\(side.capitalized) roster" : "\(title) roster") {
+        Section(copy.rosterTitle(side: side, team: title)) {
             let players = side == "home" ? $match.homePlayers : $match.awayPlayers
             ForEach(players) { $player in
                 HStack {
-                    TextField("Player name", text: $player.name)
+                    TextField(copy.playerName, text: $player.name)
                         .accessibilityIdentifier("fixture.\(side)Player.\(player.id.uuidString)")
-                    TextField("No.", value: $player.shirtNumber, format: .number)
+                    TextField(copy.shirtNumber, value: $player.shirtNumber, format: .number)
                         .keyboardType(.numberPad).multilineTextAlignment(.trailing).frame(width: 52)
                 }
             }
             .onDelete { match.removePlayers(at: $0, from: side) }
-            Button("Add \(side) player", systemImage: "person.badge.plus") { match.addPlayer(to: side) }
+            Button(copy.addPlayer(side: side), systemImage: "person.badge.plus") { match.addPlayer(to: side) }
         }
     }
 
@@ -1006,6 +1050,7 @@ private struct PhoneSetupDetailsView: View {
 
 struct PhoneMatchControlView: View {
     @EnvironmentObject private var match: PhoneMatchStore
+    @Environment(\.refereeCopy) private var copy
     @State private var showingMoreActions = false
 
     var body: some View {
@@ -1014,9 +1059,9 @@ struct PhoneMatchControlView: View {
             ScrollView {
             VStack(spacing: 20) {
                 HStack {
-                    Label(match.periodLabel, systemImage: match.activePeriodID == nil ? "pause.circle" : "record.circle")
+                    Label(copy.periodLabel(match.periodLabel), systemImage: match.activePeriodID == nil ? "pause.circle" : "record.circle")
                     Spacer()
-                    Text("LOCAL SAVE").font(.caption2.weight(.bold)).foregroundStyle(.green)
+                    Text(copy.localSave).font(.caption2.weight(.bold)).foregroundStyle(.green)
                 }
                 .font(.caption.weight(.semibold)).foregroundStyle(.secondary)
                 HStack(alignment: .top, spacing: 10) {
@@ -1024,17 +1069,19 @@ struct PhoneMatchControlView: View {
                             (match.pendingSyncCount == 0 ? "checkmark.icloud" : "arrow.triangle.2.circlepath.icloud"))
                         .foregroundStyle(match.syncFailure != nil ? Color.red : (match.pendingSyncCount == 0 ? Color.green : Color.orange))
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(match.syncStatus).font(.footnote.weight(.semibold))
+                        Text(copy.syncStatus(peer: "Watch", reachable: match.isWatchReachable,
+                                             pending: match.pendingSyncCount, failed: match.syncFailure != nil))
+                            .font(.footnote.weight(.semibold))
                         if let failure = match.syncFailure {
                             Text(failure).font(.caption).foregroundStyle(.secondary)
                         } else if let synced = match.lastPeerSyncAt {
-                            Text("Last Watch contact \(synced.formatted(date: .omitted, time: .shortened))")
+                            Text(copy.lastWatchContact(synced.formatted(date: .omitted, time: .shortened)))
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                     }
                     Spacer()
                     if match.pendingSyncCount > 0 || match.syncFailure != nil {
-                        Button("Retry") { match.retrySynchronization() }.font(.caption.weight(.semibold))
+                        Button(copy.retry) { match.retrySynchronization() }.font(.caption.weight(.semibold))
                     }
                 }
                 .padding(10).background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -1046,38 +1093,38 @@ struct PhoneMatchControlView: View {
                 }
                 .padding(14).background(.thinMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
                 if match.activePeriodID == nil {
-                    Label(match.periodLabel == "FULL TIME" ? "Match complete" : "Hold to start \(match.periodLabel.lowercased())", systemImage: "play.fill")
+                    Label(match.periodLabel == "FULL TIME" ? copy.matchComplete : copy.holdToStart(copy.periodLabel(match.periodLabel)), systemImage: "play.fill")
                         .font(.headline).padding().frame(maxWidth: .infinity)
                         .background(.tint, in: RoundedRectangle(cornerRadius: 18, style: .continuous)).foregroundStyle(.white)
                         .onLongPressGesture(minimumDuration: 1) { match.startNextPeriod() }
                         .disabled(match.periodLabel == "FULL TIME")
                         .accessibilityIdentifier("match.period.start")
                 } else {
-                    Text("Swipe a team action to save · hold the period control to end")
+                    Text(copy.activeMatchGuidance)
                         .font(.caption).foregroundStyle(.secondary)
                 }
 
                 HStack(spacing: 12) {
-                    quickAction(title: "GOAL", subtitle: match.homeTeam, icon: "soccerball", tint: .green) { match.recordGoal(for: "home", matchClockMs: elapsed) }
-                    quickAction(title: "GOAL", subtitle: match.awayTeam, icon: "soccerball", tint: .green) { match.recordGoal(for: "away", matchClockMs: elapsed) }
+                    quickAction(title: copy.goal, subtitle: match.homeTeam, icon: "soccerball", tint: .green) { match.recordGoal(for: "home", matchClockMs: elapsed) }
+                    quickAction(title: copy.goal, subtitle: match.awayTeam, icon: "soccerball", tint: .green) { match.recordGoal(for: "away", matchClockMs: elapsed) }
                 }
                 .disabled(match.activePeriodID == nil)
                 HStack(spacing: 12) {
-                    quickAction(title: "FOUL", subtitle: match.homeTeam, icon: "figure.soccer", tint: .orange) { match.recordFoul(for: "home", matchClockMs: elapsed) }
-                    quickAction(title: "FOUL", subtitle: match.awayTeam, icon: "figure.soccer", tint: .orange) { match.recordFoul(for: "away", matchClockMs: elapsed) }
+                    quickAction(title: copy.foul, subtitle: match.homeTeam, icon: "figure.soccer", tint: .orange) { match.recordFoul(for: "home", matchClockMs: elapsed) }
+                    quickAction(title: copy.foul, subtitle: match.awayTeam, icon: "figure.soccer", tint: .orange) { match.recordFoul(for: "away", matchClockMs: elapsed) }
                 }
                 .disabled(match.activePeriodID == nil)
                 HStack(spacing: 12) {
-                    Button { match.recordCard(for: "home", colour: "yellow", matchClockMs: elapsed) } label: { Label("Yellow · \(match.homeTeam)", systemImage: "rectangle.fill").frame(maxWidth: .infinity) }
-                    Button { match.recordCard(for: "away", colour: "yellow", matchClockMs: elapsed) } label: { Label("Yellow · \(match.awayTeam)", systemImage: "rectangle.fill").frame(maxWidth: .infinity) }
+                    Button { match.recordCard(for: "home", colour: "yellow", matchClockMs: elapsed) } label: { Label("\(copy.yellow) · \(match.homeTeam)", systemImage: "rectangle.fill").frame(maxWidth: .infinity) }
+                    Button { match.recordCard(for: "away", colour: "yellow", matchClockMs: elapsed) } label: { Label("\(copy.yellow) · \(match.awayTeam)", systemImage: "rectangle.fill").frame(maxWidth: .infinity) }
                 }
                 .buttonStyle(.bordered).tint(.yellow).disabled(match.activePeriodID == nil)
-                Button { showingMoreActions = true } label: { Label("More match actions", systemImage: "ellipsis.circle").frame(maxWidth: .infinity) }
+                Button { showingMoreActions = true } label: { Label(copy.moreMatchActions, systemImage: "ellipsis.circle").frame(maxWidth: .infinity) }
                     .buttonStyle(.bordered).disabled(match.activePeriodID == nil)
                 NavigationLink {
                     PhoneTimelineView()
                 } label: {
-                    Label("Event timeline", systemImage: "clock.arrow.circlepath")
+                    Label(copy.eventTimeline, systemImage: "clock.arrow.circlepath")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
@@ -1085,7 +1132,7 @@ struct PhoneMatchControlView: View {
                 NavigationLink {
                     PhoneMatchSetupView()
                 } label: {
-                    Label("Match setup", systemImage: match.participantSetupComplete ? "checkmark.circle" : "exclamationmark.circle")
+                    Label(copy.matchSetup, systemImage: match.participantSetupComplete ? "checkmark.circle" : "exclamationmark.circle")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
@@ -1093,14 +1140,14 @@ struct PhoneMatchControlView: View {
                 NavigationLink {
                     PhonePostMatchReviewView()
                 } label: {
-                    Label(match.periodLabel == "FULL TIME" ? "Review and sign reports" : "Report readiness",
+                    Label(match.periodLabel == "FULL TIME" ? copy.reviewAndSignReports : copy.reportReadiness,
                           systemImage: "checkmark.seal")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
                 .accessibilityIdentifier("match.review")
                 if match.activePeriodID != nil {
-                    Label("Hold to end period", systemImage: "stop.fill")
+                    Label(copy.holdToEndPeriod, systemImage: "stop.fill")
                         .font(.subheadline.weight(.semibold)).foregroundStyle(.red)
                         .padding(.vertical, 10).frame(maxWidth: .infinity)
                         .background(Color.red.opacity(0.12), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -1987,6 +2034,7 @@ private struct RevisionEditorView: View {
 
 private struct MorePhoneActionsView: View {
     @EnvironmentObject private var match: PhoneMatchStore
+    @Environment(\.refereeCopy) private var copy
     let elapsed: Int64
     @Environment(\.dismiss) private var dismiss
     @State private var substitutionSide = "home"
@@ -1996,55 +2044,55 @@ private struct MorePhoneActionsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Substitution") {
-                    Picker("Team", selection: $substitutionSide) {
+                Section(copy.substitution) {
+                    Picker(copy.team, selection: $substitutionSide) {
                         Text(match.homeTeam).tag("home"); Text(match.awayTeam).tag("away")
                     }
-                    Picker("Player out", selection: $playerOut) {
-                        Text("Select").tag(UUID?.none)
+                    Picker(copy.playerOut, selection: $playerOut) {
+                        Text(copy.select).tag(UUID?.none)
                         ForEach(match.roster(for: substitutionSide)) { Text($0.displayName).tag(Optional($0.id)) }
                     }
-                    Picker("Player in", selection: $playerIn) {
-                        Text("Select").tag(UUID?.none)
+                    Picker(copy.playerIn, selection: $playerIn) {
+                        Text(copy.select).tag(UUID?.none)
                         ForEach(match.roster(for: substitutionSide)) { Text($0.displayName).tag(Optional($0.id)) }
                     }
-                    Button("Save substitution") {
+                    Button(copy.saveSubstitution) {
                         guard let playerOut, let playerIn else { return }
                         match.recordSubstitution(for: substitutionSide, playerOut: playerOut,
                                                  playerIn: playerIn, matchClockMs: elapsed); dismiss()
                     }.disabled(playerOut == nil || playerIn == nil || playerOut == playerIn)
                 }
-                Section("Penalty") {
-                    Button("Home · scored") { penalty("home", .scored) }
-                    Button("Home · not scored") { penalty("home", .missed) }
-                    Button("Away · scored") { penalty("away", .scored) }
-                    Button("Away · not scored") { penalty("away", .missed) }
+                Section(copy.penalty) {
+                    Button(copy.penaltyAction(side: "home", scored: true)) { penalty("home", .scored) }
+                    Button(copy.penaltyAction(side: "home", scored: false)) { penalty("home", .missed) }
+                    Button(copy.penaltyAction(side: "away", scored: true)) { penalty("away", .scored) }
+                    Button(copy.penaltyAction(side: "away", scored: false)) { penalty("away", .missed) }
                 }
-                Section("Injury and VAR") {
-                    Button("Home injury") { injury("home") }
-                    Button("Away injury") { injury("away") }
-                    Button("Unassigned injury") { injury(nil) }
-                    Button("Start VAR review") { match.recordVAR(type: .other, matchClockMs: elapsed); dismiss() }
+                Section(copy.injuryAndVAR) {
+                    Button(copy.injuryAction(side: "home")) { injury("home") }
+                    Button(copy.injuryAction(side: "away")) { injury("away") }
+                    Button(copy.injuryAction(side: nil)) { injury(nil) }
+                    Button(copy.startVARReview) { match.recordVAR(type: .other, matchClockMs: elapsed); dismiss() }
                 }
-                Section("Suspension and restart") {
-                    Button("Suspend · weather") { suspend(.started, "weather") }
-                    Button("Suspend · crowd control") { suspend(.started, "crowd_control") }
-                    Button("Resume match") { suspend(.resumed, "match_interruption") }
-                    Button("Dropped ball restart") { restart(.droppedBall) }
-                    Button("Free-kick restart") { restart(.freeKick) }
+                Section(copy.suspensionAndRestart) {
+                    Button(copy.suspendWeather) { suspend(.started, "weather") }
+                    Button(copy.suspendCrowd) { suspend(.started, "crowd_control") }
+                    Button(copy.resumeMatchAction) { suspend(.resumed, "match_interruption") }
+                    Button(copy.droppedBallRestart) { restart(.droppedBall) }
+                    Button(copy.freeKickRestart) { restart(.freeKick) }
                 }
-                Section("Added time") {
-                    Button("Injury marker") { save("injury") }
-                    Button("VAR marker") { save("var") }
-                    Button("Delayed restart marker") { save("delayed_restart") }
+                Section(copy.addedTimeSection) {
+                    Button(copy.injuryMarker) { save("injury") }
+                    Button(copy.varMarker) { save("var") }
+                    Button(copy.delayedRestartMarker) { save("delayed_restart") }
                 }
-                Section("Direct red — hold to confirm") {
-                    Text("Home team").foregroundStyle(.red).onLongPressGesture(minimumDuration: 1) { match.recordCard(for: "home", colour: "red", matchClockMs: elapsed); dismiss() }
-                    Text("Away team").foregroundStyle(.red).onLongPressGesture(minimumDuration: 1) { match.recordCard(for: "away", colour: "red", matchClockMs: elapsed); dismiss() }
+                Section(copy.directRedHoldToConfirm) {
+                    Text(copy.homeTeam).foregroundStyle(.red).onLongPressGesture(minimumDuration: 1) { match.recordCard(for: "home", colour: "red", matchClockMs: elapsed); dismiss() }
+                    Text(copy.awayTeam).foregroundStyle(.red).onLongPressGesture(minimumDuration: 1) { match.recordCard(for: "away", colour: "red", matchClockMs: elapsed); dismiss() }
                 }
             }
-            .navigationTitle("Match actions")
-            .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { dismiss() } } }
+            .navigationTitle(copy.matchActions)
+            .toolbar { ToolbarItem(placement: .topBarTrailing) { Button(copy.done) { dismiss() } } }
         }
     }
     private func save(_ cause: String) { match.recordStoppage(cause: cause, matchClockMs: elapsed); dismiss() }

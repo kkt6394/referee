@@ -7,11 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		02B0BE56625E67A1CE929B82 /* RefereeCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08F095F9092ED324FE60C553 /* RefereeCopy.swift */; };
 		11C6996150993E6CA66FE22C /* RefereeLedger in Frameworks */ = {isa = PBXBuildFile; productRef = B8040077601BD2F1AED30FAC /* RefereeLedger */; };
 		1E3B94EA5B5AD1BF320C1B43 /* RefereePhoneUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 993BA19B0FFC470C0EB3246B /* RefereePhoneUITests.swift */; };
 		1FA7A2D7559F7DD71B63F928 /* RefereeWatchUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3497CAFF82A9E3481F1C2629 /* RefereeWatchUITests.swift */; };
 		2F09B583CA7ABF0D3AB16568 /* RefereeWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 0E3BDEB808933146621461CD /* RefereeWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		375BC2EF4D551DC0E5C43E3C /* ReportExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 526CC76B8DB7AF5A3500E78C /* ReportExport.swift */; };
+		7010A684F4F92F04FF9682CB /* RefereeCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08F095F9092ED324FE60C553 /* RefereeCopy.swift */; };
 		AC9BE489C7D8C422A37DE124 /* RefereePhoneApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE8F9866B860DC68A6D0125A /* RefereePhoneApp.swift */; };
 		C5F452C69DDD1369CF21ADA5 /* RefereeWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76DF939A4B7775B6C81E7DC /* RefereeWatchApp.swift */; };
 		DE3FE42383C9998C4BE4C2D3 /* RefereeLedger in Frameworks */ = {isa = PBXBuildFile; productRef = 08D7BDAC2E40FD2366A2A700 /* RefereeLedger */; };
@@ -56,11 +58,12 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		08B4E1DAD97B839892052BA7 /* referee */ = {isa = PBXFileReference; lastKnownFileType = folder; name = referee; path = .; sourceTree = SOURCE_ROOT; };
+		08F095F9092ED324FE60C553 /* RefereeCopy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RefereeCopy.swift; sourceTree = "<group>"; };
 		0E3BDEB808933146621461CD /* RefereeWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RefereeWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3497CAFF82A9E3481F1C2629 /* RefereeWatchUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RefereeWatchUITests.swift; sourceTree = "<group>"; };
 		4096AF3FD4ADFA7126418D05 /* RefereePhoneUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = RefereePhoneUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		526CC76B8DB7AF5A3500E78C /* ReportExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportExport.swift; sourceTree = "<group>"; };
+		08B4E1DAD97B839892052BA7 /* referee */ = {isa = PBXFileReference; lastKnownFileType = folder; name = referee; path = .; sourceTree = SOURCE_ROOT; };
 		993BA19B0FFC470C0EB3246B /* RefereePhoneUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RefereePhoneUITests.swift; sourceTree = "<group>"; };
 		BAFC5810FFDA69629356E4E6 /* RefereeWatchUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RefereeWatchUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE8F9866B860DC68A6D0125A /* RefereePhoneApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RefereePhoneApp.swift; sourceTree = "<group>"; };
@@ -95,6 +98,7 @@
 				BA0624CE063D23F4BCDF26F3 /* Packages */,
 				AF7860A99F56C1FFD48FE4BD /* RefereePhoneUITests */,
 				DD3AD5712AE3B28555C2BF2F /* RefereeWatchUITests */,
+				D448CB73EE4A8AAB3D647C27 /* Shared */,
 				8756E52F630E0D7B1301EDF8 /* Watch */,
 				C302E80903EB45C08B025CF0 /* Products */,
 			);
@@ -145,6 +149,15 @@
 				BAFC5810FFDA69629356E4E6 /* RefereeWatchUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		D448CB73EE4A8AAB3D647C27 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				08F095F9092ED324FE60C553 /* RefereeCopy.swift */,
+			);
+			name = Shared;
+			path = Apps/Shared;
 			sourceTree = "<group>";
 		};
 		DD3AD5712AE3B28555C2BF2F /* RefereeWatchUITests */ = {
@@ -290,6 +303,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				02B0BE56625E67A1CE929B82 /* RefereeCopy.swift in Sources */,
 				AC9BE489C7D8C422A37DE124 /* RefereePhoneApp.swift in Sources */,
 				375BC2EF4D551DC0E5C43E3C /* ReportExport.swift in Sources */,
 			);
@@ -299,6 +313,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7010A684F4F92F04FF9682CB /* RefereeCopy.swift in Sources */,
 				C5F452C69DDD1369CF21ADA5 /* RefereeWatchApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

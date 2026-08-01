@@ -6,6 +6,7 @@ final class RefereeWatchUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchEnvironment["REFEREE_WATCH_UI_TEST_DATABASE"] = UUID().uuidString
         app.launchEnvironment["REFEREE_WATCH_UI_TEST_SEED"] = "fixture"
+        app.launchEnvironment["REFEREE_WATCH_UI_TEST_LANGUAGE"] = "en"
         app.launch()
 
         let foul = app.buttons["watch.action.foul"]
@@ -24,6 +25,7 @@ final class RefereeWatchUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchEnvironment["REFEREE_WATCH_UI_TEST_DATABASE"] = UUID().uuidString
         app.launchEnvironment["REFEREE_WATCH_UI_TEST_SEED"] = "fixture"
+        app.launchEnvironment["REFEREE_WATCH_UI_TEST_LANGUAGE"] = "en"
         app.launch()
 
         let foul = app.buttons["watch.action.foul"]
