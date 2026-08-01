@@ -238,7 +238,7 @@ git push
 - [ ] **Step 1: Write the failing ledger acceptance.**
 
 ~~~swift
-@Test func fieldMvpRecoversOfflineWatchEventBeforeSignedElevenAsideExport() throws {
+@Test func fieldMvpReadinessAndOfflineWatchEventReachSignedMatchReport() throws {
     let phone = try preparedElevenAsideStore(matchID: matchID, deviceID: UUID())
     let watch = try LedgerStore(originDeviceID: UUID())
     _ = try watch.create(EventDraft(matchID: matchID, eventType: "foul_recorded",

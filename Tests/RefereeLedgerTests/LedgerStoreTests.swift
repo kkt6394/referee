@@ -238,6 +238,36 @@ struct LedgerStoreTests {
         #expect(try watch.rebuildProjection(matchID: matchID) == MatchProjection(homeScore: 1, awayScore: 1))
     }
 
+    @Test func fieldMvpReadinessAndOfflineWatchEventReachSignedMatchReport() throws {
+        let phoneID = UUID(), watchID = UUID()
+        let phone = try preparedElevenAsideStore(matchID: matchID, deviceID: phoneID)
+        let watch = try LedgerStore(originDeviceID: watchID)
+        #expect(try phone.fieldReadiness(matchID: matchID).canStartMatch)
+        try watch.installMatchPackage(try #require(try phone.matchPackage(matchID: matchID)), from: phoneID)
+
+        _ = try watch.create(EventDraft(matchID: matchID, eventType: "foul_recorded", matchClockMs: 600_000,
+                                        payloadJSON: #"{"teamSide":"away"}"#), peers: ["iphone"])
+        try deliverPending(from: watch, to: phone, outboxPeer: "iphone", senderID: watchID)
+        #expect(try phone.timeline(matchID: matchID).contains { $0.eventType == "foul_recorded" })
+
+        for definition in [MatchPeriodDefinition(kind: "first_half", ordinal: 1),
+                           MatchPeriodDefinition(kind: "second_half", ordinal: 2)] {
+            let periodID = UUID()
+            _ = try phone.create(EventDraft(matchID: matchID, eventType: "period_started", matchPeriodID: periodID,
+                                            matchClockMs: 0,
+                                            payloadJSON: "{\"ordinal\":\(definition.ordinal),\"periodKind\":\"\(definition.kind)\"}"), peers: [])
+            _ = try phone.create(EventDraft(matchID: matchID, eventType: "period_ended", matchPeriodID: periodID,
+                                            matchClockMs: 2_700_000,
+                                            payloadJSON: "{\"finalClockMs\":2700000,\"ordinal\":\(definition.ordinal),\"periodKind\":\"\(definition.kind)\"}"), peers: [])
+        }
+        let validation = try phone.validatePostMatch(matchID: matchID, confirmedScore: ConfirmedScore(home: 0, away: 0))
+        #expect(validation.canSign)
+        let report = try #require(try phone.reportDocuments(matchID: matchID).first { $0.kind == .match })
+        let signed = try phone.signReport(matchID: matchID, kind: .match, documentID: report.id,
+                                          confirmedScore: ConfirmedScore(home: 0, away: 0), declaration: "Reviewed")
+        #expect(signed.status == .current)
+    }
+
     @Test func fullAcceptancePathFromOfflineWatchToSignedExports() throws {
         let phoneID = UUID(), watchID = UUID()
         let phone = try LedgerStore(originDeviceID: phoneID)
