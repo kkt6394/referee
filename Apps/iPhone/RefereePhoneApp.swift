@@ -64,6 +64,7 @@ final class PhoneMatchStore: NSObject, ObservableObject, WCSessionDelegate {
     @Published private(set) var syncStatus = "Watch unavailable · saved locally"
     @Published private(set) var syncFailure: String?
     @Published private(set) var lastPeerSyncAt: Date?
+    @Published private(set) var fieldReadiness: FieldReadiness?
 
     @Published private(set) var matchID: UUID = UUID()
     private var ledger: LedgerStore?
@@ -183,7 +184,11 @@ final class PhoneMatchStore: NSObject, ObservableObject, WCSessionDelegate {
 
     private func finishFixtureSave() {
         UserDefaults.standard.set(matchID.uuidString, forKey: "activeMatchID")
-        reloadMatches(); refreshProjection(); publishMatchPackage()
+        reloadMatches(); refreshProjection(); refreshFieldReadiness(); publishMatchPackage()
+    }
+
+    func refreshFieldReadiness() {
+        fieldReadiness = try? ledger?.fieldReadiness(matchID: matchID)
     }
 
     func createMatch() {
@@ -212,7 +217,7 @@ final class PhoneMatchStore: NSObject, ObservableObject, WCSessionDelegate {
         guard let ledger else { return }
         matchID = fixture.matchID; load(fixture, ledger: ledger)
         UserDefaults.standard.set(matchID.uuidString, forKey: "activeMatchID")
-        refreshProjection(); publishMatchPackage(); synchronize()
+        refreshProjection(); refreshFieldReadiness(); publishMatchPackage(); synchronize()
     }
 
     private func reloadMatches() { matches = (try? ledger?.fixtures()) ?? [] }
@@ -834,7 +839,29 @@ private struct PhoneMatchSetupView: View {
                          detail: match.extraTimeEnabled ? "Extra time enabled" : "Standard periods")
             }
             Section {
-                Text("Incomplete preparation is shown as a warning and does not block offline match operation. Required report details must be completed before sign-off.")
+                if let readiness = match.fieldReadiness {
+                    if !readiness.blocking.isEmpty {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Complete before starting")
+                                .font(.headline).foregroundStyle(.red)
+                                .accessibilityIdentifier("setup.readiness.blocking")
+                            ForEach(readiness.blocking) { issue in
+                                Text("• \(issue.title)").font(.caption).foregroundStyle(.red)
+                            }
+                        }
+                    }
+                    if !readiness.warnings.isEmpty {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Recommended before kick-off")
+                                .font(.headline).foregroundStyle(.orange)
+                                .accessibilityIdentifier("setup.readiness.warning")
+                            ForEach(readiness.warnings) { issue in
+                                Text("• \(issue.title)").font(.caption).foregroundStyle(.orange)
+                            }
+                        }
+                    }
+                }
+                Text("Required preparation blocks live control; warnings can be completed later, but report sign-off still validates mandatory details.")
                     .font(.callout).foregroundStyle(.secondary)
                 Button("Save preparation") { _ = match.saveFixtureDraft() }
                     .accessibilityIdentifier("setup.save")
@@ -842,6 +869,7 @@ private struct PhoneMatchSetupView: View {
                     if match.saveFixtureDraft() { showingControl = true }
                 }
                 .buttonStyle(.borderedProminent)
+                .disabled(match.fieldReadiness?.canStartMatch == false)
                 .accessibilityIdentifier("setup.openControl")
             }
             if let message = match.saveMessage { Text(message).font(.footnote).foregroundStyle(.secondary) }

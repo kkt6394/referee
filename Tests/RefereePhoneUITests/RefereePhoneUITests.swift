@@ -2,6 +2,24 @@ import XCTest
 
 final class RefereePhoneUITests: XCTestCase {
     @MainActor
+    func testIncompleteFixtureShowsBlockingReadinessBeforeLiveControl() throws {
+        let app = XCUIApplication()
+        app.launchEnvironment["REFEREE_UI_TEST_DATABASE"] = UUID().uuidString
+        app.launch()
+        app.buttons["matches.create"].tap()
+        app.textFields["fixture.competition"].tap(); app.textFields["fixture.competition"].typeText("KFA League")
+        app.textFields["fixture.venue"].tap(); app.textFields["fixture.venue"].typeText("Main pitch")
+        app.textFields["fixture.homeTeam"].tap(); app.textFields["fixture.homeTeam"].typeText("Seoul")
+        app.textFields["fixture.awayTeam"].tap(); app.textFields["fixture.awayTeam"].typeText("Busan")
+        app.buttons["fixture.save"].tap()
+
+        let readiness = scrollToElement(app.staticTexts["setup.readiness.blocking"], in: app)
+        XCTAssertTrue(readiness.exists)
+        let openControl = scrollToElement(app.buttons["setup.openControl"], in: app)
+        XCTAssertFalse(openControl.isEnabled)
+    }
+
+    @MainActor
     func testCreateFixtureAndRecordLiveActions() throws {
         let app = launchSeededFixture()
         saveFixture(in: app)

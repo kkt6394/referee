@@ -129,12 +129,14 @@ git push
 ~~~swift
 func testIncompleteFixtureShowsBlockingReadinessBeforeLiveControl() throws {
     let app = XCUIApplication()
-    app.launchEnvironment["REFEREE_PHONE_UI_TEST_DATABASE"] = UUID().uuidString
+    app.launchEnvironment["REFEREE_UI_TEST_DATABASE"] = UUID().uuidString
     app.launch()
     app.buttons["matches.create"].tap()
     app.buttons["fixture.save"].tap()
 
-    XCTAssertTrue(app.staticTexts["setup.readiness.blocking"].waitForExistence(timeout: 3))
+    let readiness = app.staticTexts["setup.readiness.blocking"]
+    XCTAssertTrue(readiness.waitForExistence(timeout: 3))
+    XCTAssertTrue(readiness.isHittable)
     XCTAssertFalse(app.buttons["setup.openControl"].isEnabled)
 }
 ~~~
