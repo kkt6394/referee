@@ -3,6 +3,7 @@ import WatchConnectivity
 import RefereeLedger
 import PhotosUI
 import UniformTypeIdentifiers
+import UIKit
 
 private extension Color {
     init(hex: String) {
@@ -10,6 +11,12 @@ private extension Color {
         self.init(red: Double((value >> 16) & 0xFF) / 255,
                   green: Double((value >> 8) & 0xFF) / 255,
                   blue: Double(value & 0xFF) / 255)
+    }
+
+    var hexString: String {
+        var red: CGFloat = 0; var green: CGFloat = 0; var blue: CGFloat = 0; var alpha: CGFloat = 0
+        UIColor(self).getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        return String(format: "#%02X%02X%02X", Int(red * 255), Int(green * 255), Int(blue * 255))
     }
 }
 
@@ -931,11 +938,13 @@ private struct PhoneSetupDetailsView: View {
                             Label(option.name, systemImage: "circle.fill").foregroundStyle(option.color).tag(option.id)
                         }
                     }
+                    ColorPicker("Home custom color", selection: customColorBinding(for: $match.homeTeamColor), supportsOpacity: false)
                     Picker("Away kit", selection: $match.awayTeamColor) {
                         ForEach(TeamKitPalette.all) { option in
                             Label(option.name, systemImage: "circle.fill").foregroundStyle(option.color).tag(option.id)
                         }
                     }
+                    ColorPicker("Away custom color", selection: customColorBinding(for: $match.awayTeamColor), supportsOpacity: false)
                 }
                 Section("Pitch dimensions") {
                     HStack {
@@ -986,6 +995,10 @@ private struct PhoneSetupDetailsView: View {
             .onDelete { match.removePlayers(at: $0, from: side) }
             Button("Add \(side) player", systemImage: "person.badge.plus") { match.addPlayer(to: side) }
         }
+    }
+
+    private func customColorBinding(for value: Binding<String>) -> Binding<Color> {
+        Binding(get: { Color(hex: value.wrappedValue) }, set: { value.wrappedValue = $0.hexString })
     }
 }
 
