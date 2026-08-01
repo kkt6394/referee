@@ -16,6 +16,7 @@ private extension Color {
 @main
 struct RefereeWatchApp: App {
     @StateObject private var match = WatchMatchStore()
+    @AppStorage("referee.app.language") private var languageCode = AppLanguage.korean.rawValue
 
     var body: some Scene {
         WindowGroup {
@@ -23,6 +24,7 @@ struct RefereeWatchApp: App {
                 WatchMatchHomeView()
             }
             .environmentObject(match)
+            .environment(\.locale, Locale(identifier: AppLanguage(rawValue: languageCode)?.rawValue ?? AppLanguage.korean.rawValue))
         }
     }
 }

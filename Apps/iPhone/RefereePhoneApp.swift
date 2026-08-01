@@ -46,11 +46,13 @@ private struct TeamKitPalette: Identifiable {
 @main
 struct RefereePhoneApp: App {
     @StateObject private var match = PhoneMatchStore()
+    @AppStorage("referee.app.language") private var languageCode = AppLanguage.korean.rawValue
 
     var body: some Scene {
         WindowGroup {
             PhoneRootView()
                 .environmentObject(match)
+                .environment(\.locale, Locale(identifier: AppLanguage(rawValue: languageCode)?.rawValue ?? AppLanguage.korean.rawValue))
         }
     }
 }
