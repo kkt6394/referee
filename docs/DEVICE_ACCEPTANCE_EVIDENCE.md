@@ -1,5 +1,74 @@
 # Device Acceptance Evidence
 
+## 2026-08-01 — Localized UI release gate
+
+- Release candidate implementation head:
+  `e416e7a7f9c311caa63dfd80e405a26843875811`. The feature commit range is
+  `d222a02684f3c6525df069ca532f09b81b8353e1..e416e7a7f9c311caa63dfd80e405a26843875811`.
+- `swift test` passed 61/61 tests with zero failures: 3 XCTest
+  `AppLanguageTests` plus 58 Swift Testing `LedgerStoreTests`.
+- The full iPhone UI suite ran on `Referee-iPhone` (iPhone 16 Pro simulator,
+  iOS 18.3.1): 8 test cases total, 7 passed and 1 failed. The result bundle is
+  `/private/tmp/referee-task5-phone-e416e7a.xcresult`.
+- The failing iPhone case is the existing
+  `testCompleteMatchSignExportAndPresentShareSheet`. It reached the event
+  timeline, found and tapped a `timeline.goal_recorded.*` row, but
+  `event.details.player` did not appear. XCTest reported two assertions at
+  `RefereePhoneUITests.swift:129-130`; the xcresult records one failed test
+  case. This run does not hide, waive, or classify that baseline as passing.
+- The full Watch UI suite passed 3/3 with zero failures on Apple Watch Series
+  11 (46 mm), watchOS 26.2. Coverage included Korean hierarchy/team colors,
+  the direct-red hold requirement, and offline foul queue persistence across
+  termination and relaunch. The result bundle is
+  `/private/tmp/referee-task5-watch-e416e7a.xcresult`.
+- A focused Korean-to-English UI run passed 1/1. It asserted the Korean
+  `경기`/`경기 생성` screen, selected English through `settings.language`, and
+  asserted `Matches`/`Create match`. The result bundle is
+  `/private/tmp/referee-task5-language-e416e7a.xcresult`.
+
+### Clean build, install, launch, and screenshots
+
+- `RefereePhone` built successfully from an initially absent DerivedData path
+  at `/private/tmp/referee-task5-derived-phone-e416e7a`. The build retained one
+  Swift concurrency warning at `RefereePhoneApp.swift:1455` about referencing
+  actor-isolated `copy` from a `Sendable` closure.
+- `RefereeWatch` built successfully from an initially absent DerivedData path
+  at `/private/tmp/referee-task5-derived-watch-e416e7a`.
+- The clean-built iPhone app installed and launched successfully. The first
+  clean-install screenshot showed the Korean default and a full 1206×2622
+  device canvas with no letterboxing. The screenshot is
+  `/private/tmp/referee-task5-iphone-ko-e416e7a.png` (SHA-256
+  `d10fcc1991e12d47792bc2149817eff1d1fa642e51bc86be2c5d46d6f378c34d`).
+- The first Watch install attempt immediately after uninstall returned
+  `IXErrorDomain` code 24 (`Uninstall requested`). Inspection confirmed the
+  old app was absent; after CoreSimulatorService recovered, a sequential
+  install of the same clean-built product succeeded and its app container and
+  launch were confirmed.
+- The Watch Korean screenshot is
+  `/private/tmp/referee-task5-watch-ko-e416e7a.png` at 416×496 (SHA-256
+  `1627825a1627b3df62c72d7e19d6fcebfccd0a4f736b8257a51f6da623bd39cd`).
+  It shows `전반`, the 0–0 score, team names, and localized iPhone/queue status.
+- After the in-app English switch test, relaunch preserved English. The
+  1206×2622 screenshot shows `Matches`, `Create match`, `Language`, and
+  `English` across the full device canvas:
+  `/private/tmp/referee-task5-iphone-en-e416e7a.png` (SHA-256
+  `318308a3f8fbdc46386b7d329c9084d6c973d6374eef53676f793c7cd8d30af4`).
+
+### Release limitations and human handoff
+
+- The automated iPhone gate is not fully green because the sign/export test
+  still fails before event detail. Its disposition must remain explicit in
+  release review.
+- No paired-hardware pilot completion is claimed. A human referee and observer
+  must complete `docs/FIELD_TEST_PROTOCOL.md` on the paired iPhone and Apple
+  Watch before recording field acceptance.
+- Simulator automation cannot attest that a person felt a Watch haptic.
+  Physical disconnect/reconnect convergence, tap-to-home timing during
+  representative movement, and all haptic patterns remain pending human
+  evidence.
+- Evidence stored under `/private/tmp` is local and temporary; copy the result
+  bundles and screenshots to durable storage before clearing temporary files.
+
 ## 2026-07-20 — Simulator acceptance selected as the automated gate
 
 - The user confirmed that physical-device compilation is not required for the
