@@ -2,6 +2,24 @@ import XCTest
 
 final class RefereeWatchUITests: XCTestCase {
     @MainActor
+    func testDirectRedRequiresHoldThenReturnsToLiveClockWithQueuedSave() throws {
+        let app = XCUIApplication()
+        app.launchEnvironment["REFEREE_WATCH_UI_TEST_DATABASE"] = UUID().uuidString
+        app.launchEnvironment["REFEREE_WATCH_UI_TEST_SEED"] = "fixture"
+        app.launch()
+
+        let foul = app.buttons["watch.action.foul"]
+        XCTAssertTrue(foul.waitForExistence(timeout: 5))
+        app.buttons["watch.action.card"].tap()
+        let red = app.staticTexts["watch.card.red.home"]
+        XCTAssertTrue(red.waitForExistence(timeout: 2))
+        red.press(forDuration: 1.1)
+
+        XCTAssertTrue(app.staticTexts["watch.save.confirmation"].waitForExistence(timeout: 2))
+        XCTAssertTrue(foul.waitForExistence(timeout: 2))
+    }
+
+    @MainActor
     func testOfflineFoulReturnsHomeWithinTwoSecondsAndSurvivesRelaunch() throws {
         let app = XCUIApplication()
         app.launchEnvironment["REFEREE_WATCH_UI_TEST_DATABASE"] = UUID().uuidString
@@ -19,6 +37,7 @@ final class RefereeWatchUITests: XCTestCase {
         XCTAssertTrue(waitForExistence(foul, timeout: 2))
         XCTAssertLessThan(Date().timeIntervalSince(startedAt), 2,
                           "Foul capture must return home within two seconds")
+        XCTAssertTrue(app.staticTexts["watch.save.confirmation"].waitForExistence(timeout: 2))
         XCTAssertTrue(app.staticTexts["watch.sync.status"].label.contains("Queue 1"))
 
         app.terminate()

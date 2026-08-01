@@ -204,7 +204,7 @@ func testDirectRedRequiresHoldThenReturnsToLiveClockWithQueuedSave() throws {
 
 - [ ] **Step 2: Run it and confirm the test fails on absent identifiers/return behavior.**
 
-Run: `xcodebuild -project Referee.xcodeproj -scheme RefereeWatch -destination 'platform=watchOS Simulator,name=Apple Watch Series 11 (46mm)' -only-testing:RefereeWatchUITests/RefereeWatchUITests/testDirectRedRequiresHoldThenReturnsToLiveClockWithQueuedSave test`
+Run: `xcodebuild -project Referee.xcodeproj -scheme RefereeWatch -destination 'platform=watchOS Simulator,id=<available watch simulator id>' -only-testing:RefereeWatchUITests/RefereeWatchUITests/testDirectRedRequiresHoldThenReturnsToLiveClockWithQueuedSave test`
 
 - [ ] **Step 3: Implement labelled actions and visible successful-save feedback.**
 
@@ -216,7 +216,7 @@ Before Watch relaunch, assert `watch.save.confirmation` contains `Saved locally`
 
 - [ ] **Step 5: Verify and commit.**
 
-Run: `xcodebuild -project Referee.xcodeproj -scheme RefereeWatch -destination 'platform=watchOS Simulator,name=Apple Watch Series 11 (46mm)' test`
+Run: `xcodebuild -project Referee.xcodeproj -scheme RefereeWatch -destination 'platform=watchOS Simulator,id=<available watch simulator id>' test`
 
 ~~~sh
 git add Apps/Watch/RefereeWatchApp.swift Tests/RefereeWatchUITests/RefereeWatchUITests.swift
@@ -281,7 +281,7 @@ Run: `swift test`
 
 Run: `xcodebuild -project Referee.xcodeproj -scheme RefereePhone -destination 'platform=iOS Simulator,name=iPhone 16' test`
 
-Run: `xcodebuild -project Referee.xcodeproj -scheme RefereeWatch -destination 'platform=watchOS Simulator,name=Apple Watch Series 11 (46mm)' test`
+Run: `xcodebuild -project Referee.xcodeproj -scheme RefereeWatch -destination 'platform=watchOS Simulator,id=<available watch simulator id>' test`
 
 ~~~sh
 git add Sources/RefereeLedger/LedgerStore.swift Tests/RefereeLedgerTests/LedgerStoreTests.swift Tests/RefereePhoneUITests/RefereePhoneUITests.swift

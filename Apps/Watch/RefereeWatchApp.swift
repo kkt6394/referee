@@ -22,7 +22,10 @@ final class WatchMatchStore: NSObject, ObservableObject, WCSessionDelegate {
     private static let applicationContextPeerID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
     @Published private(set) var homeScore = 0
     @Published private(set) var awayScore = 0
+    @Published private(set) var homeTeamName = "HOME"
+    @Published private(set) var awayTeamName = "AWAY"
     @Published private(set) var status = "Saving locally"
+    @Published private(set) var saveConfirmation: String?
 
     @Published private(set) var matchID = UUID()
     @Published private(set) var periodLabel = "WAITING FOR IPHONE"
@@ -58,6 +61,8 @@ final class WatchMatchStore: NSObject, ObservableObject, WCSessionDelegate {
                let peer = UserDefaults.standard.string(forKey: "referee.watch.packagePeerID").flatMap(UUID.init(uuidString:)),
                let package = try store.installedMatchPackage(matchID: active, from: peer) {
                 matchID = active; hasMatchPackage = true; periodLabel = package.projection.periodLabel
+                homeTeamName = package.fixture.homeTeamName
+                awayTeamName = package.fixture.awayTeamName
                 activePeriodID = package.projection.periodID
                 clockAnchor = package.projection.clockAnchor
                 clockAnchorMs = package.projection.clockAnchorMs
@@ -196,6 +201,7 @@ final class WatchMatchStore: NSObject, ObservableObject, WCSessionDelegate {
             awayScore = projection.awayScore
             status = "Saved on Watch"
             pendingSyncCount = try ledger.pendingOutboxCount(matchID: matchID, peer: "iphone")
+            saveConfirmation = "Saved locally · Queue \(pendingSyncCount)"
             synchronize()
             WKInterfaceDevice.current().play(haptic)
             if haptic == .success {
@@ -419,6 +425,7 @@ struct WatchMatchHomeView: View {
                 HStack(spacing: 6) {
                     Button { selectedAction = .card(elapsed) } label: { actionLabel("CARD", icon: "rectangle.fill", tint: .yellow) }
                         .buttonStyle(.plain)
+                        .accessibilityIdentifier("watch.action.card")
                     Button { selectedAction = .more(elapsed) } label: { actionLabel("MORE", icon: "ellipsis", tint: .blue) }
                         .buttonStyle(.plain)
                 }
@@ -436,6 +443,11 @@ struct WatchMatchHomeView: View {
                             Button { match.retrySynchronization() } label: { Image(systemName: "arrow.clockwise") }
                                 .buttonStyle(.plain).accessibilityLabel("Retry iPhone sync")
                         }
+                    }
+                    if let saveConfirmation = match.saveConfirmation {
+                        Text(saveConfirmation)
+                            .font(.caption2.weight(.semibold)).foregroundStyle(.green)
+                            .accessibilityIdentifier("watch.save.confirmation")
                     }
                 }
                 .padding(.bottom, 4)
@@ -483,10 +495,10 @@ private struct GoalActionView: View {
     var body: some View {
         List {
             Section("Select scoring team") {
-                Button("HOME GOAL") { match.saveGoal(side: "home", matchClockMs: matchClockMs); dismiss() }
+                Button("\(match.homeTeamName) GOAL") { match.saveGoal(side: "home", matchClockMs: matchClockMs); dismiss() }
                     .accessibilityIdentifier("watch.goal.home")
                     .tint(.green)
-                Button("AWAY GOAL") { match.saveGoal(side: "away", matchClockMs: matchClockMs); dismiss() }
+                Button("\(match.awayTeamName) GOAL") { match.saveGoal(side: "away", matchClockMs: matchClockMs); dismiss() }
                     .accessibilityIdentifier("watch.goal.away")
                     .tint(.green)
             }
@@ -502,9 +514,9 @@ private struct FoulActionView: View {
 
     var body: some View {
         List {
-            Button("HOME FOUL") { match.saveFoul(side: "home", matchClockMs: matchClockMs); dismiss() }
+            Button("\(match.homeTeamName) FOUL") { match.saveFoul(side: "home", matchClockMs: matchClockMs); dismiss() }
                 .accessibilityIdentifier("watch.foul.home")
-            Button("AWAY FOUL") { match.saveFoul(side: "away", matchClockMs: matchClockMs); dismiss() }
+            Button("\(match.awayTeamName) FOUL") { match.saveFoul(side: "away", matchClockMs: matchClockMs); dismiss() }
                 .accessibilityIdentifier("watch.foul.away")
         }
         .navigationTitle("Foul")
@@ -513,19 +525,26 @@ private struct FoulActionView: View {
 
 private struct CardActionView: View {
     @EnvironmentObject private var match: WatchMatchStore
+    @Environment(\.dismiss) private var dismiss
     let matchClockMs: Int64
 
     var body: some View {
         List {
             Section("Yellow") {
-                Button("HOME") { match.saveCard(side: "home", colour: "yellow", matchClockMs: matchClockMs) }
-                Button("AWAY") { match.saveCard(side: "away", colour: "yellow", matchClockMs: matchClockMs) }
+                Button(match.homeTeamName) { match.saveCard(side: "home", colour: "yellow", matchClockMs: matchClockMs); dismiss() }
+                Button(match.awayTeamName) { match.saveCard(side: "away", colour: "yellow", matchClockMs: matchClockMs); dismiss() }
             }
             Section("Direct red — hold") {
-                Text("HOME")
-                    .onLongPressGesture(minimumDuration: 1) { match.saveCard(side: "home", colour: "red", matchClockMs: matchClockMs) }
-                Text("AWAY")
-                    .onLongPressGesture(minimumDuration: 1) { match.saveCard(side: "away", colour: "red", matchClockMs: matchClockMs) }
+                Text(match.homeTeamName)
+                    .frame(maxWidth: .infinity, minHeight: 36)
+                    .contentShape(Rectangle())
+                    .onLongPressGesture(minimumDuration: 1) { match.saveCard(side: "home", colour: "red", matchClockMs: matchClockMs); dismiss() }
+                    .accessibilityIdentifier("watch.card.red.home")
+                Text(match.awayTeamName)
+                    .frame(maxWidth: .infinity, minHeight: 36)
+                    .contentShape(Rectangle())
+                    .onLongPressGesture(minimumDuration: 1) { match.saveCard(side: "away", colour: "red", matchClockMs: matchClockMs); dismiss() }
+                    .accessibilityIdentifier("watch.card.red.away")
             }
         }
         .navigationTitle("Card")
