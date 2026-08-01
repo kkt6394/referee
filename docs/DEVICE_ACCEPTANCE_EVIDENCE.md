@@ -1,6 +1,33 @@
 # Device Acceptance Evidence
 
-## 2026-08-01 — Localized UI release gate
+## 2026-08-01 — Timeline detail accessibility rerun
+
+- Current tested implementation head:
+  `57c8b1d255fd1b3a77c744f4f15eb39f5e39c97c`
+  (`fix: make timeline detail rows accessible`).
+- `swift test` passed 61/61 tests with zero failures: 3 XCTest
+  `AppLanguageTests` plus 58 Swift Testing `LedgerStoreTests`.
+- The focused
+  `testCompleteMatchSignExportAndPresentShareSheet` passed 1/1 on
+  `Referee-iPhone` (iPhone 16 Pro simulator, iOS 18.3.1). The repaired path
+  opened event detail from the timeline row, completed signing, generated PDF
+  and XLSX exports, and reached the share sheet. Result bundle:
+  `/private/tmp/referee-task5-sign-export-57c8b1d.xcresult`.
+- The full `RefereePhoneUITests` suite passed 8/8 with zero failures and zero
+  skips on the same simulator in 172.309 seconds. Result bundle:
+  `/private/tmp/referee-task5-phone-57c8b1d.xcresult`.
+- This rerun supersedes the iPhone 7/8 result recorded below for
+  `e416e7a`. The earlier failure remains retained as historical evidence; it
+  is not the current iPhone gate result.
+- The Watch 3/3 result, clean-build/install evidence, language screenshots,
+  and their limitations remain documented in the earlier gate record below;
+  the Watch suite was not rerun as part of this iPhone accessibility update.
+- No paired-hardware pilot completion is claimed. A human referee and observer
+  must still complete `docs/FIELD_TEST_PROTOCOL.md`; simulator automation does
+  not attest physical haptics, representative-motion timing, or physical
+  disconnect/reconnect behavior.
+
+## 2026-08-01 — Localized UI release gate (superseded iPhone status)
 
 - Release candidate implementation head:
   `e416e7a7f9c311caa63dfd80e405a26843875811`. The feature commit range is
@@ -54,11 +81,12 @@
   `/private/tmp/referee-task5-iphone-en-e416e7a.png` (SHA-256
   `318308a3f8fbdc46386b7d329c9084d6c973d6374eef53676f793c7cd8d30af4`).
 
-### Release limitations and human handoff
+### Superseded iPhone limitation and continuing human handoff
 
-- The automated iPhone gate is not fully green because the sign/export test
-  still fails before event detail. Its disposition must remain explicit in
-  release review.
+- The automated iPhone gate was not fully green at
+  `e416e7a7f9c311caa63dfd80e405a26843875811`: its sign/export test failed
+  before event detail. The 57c8b1d rerun above supersedes that iPhone result
+  with focused 1/1 and full-suite 8/8 passing evidence.
 - No paired-hardware pilot completion is claimed. A human referee and observer
   must complete `docs/FIELD_TEST_PROTOCOL.md` on the paired iPhone and Apple
   Watch before recording field acceptance.

@@ -4,8 +4,9 @@
 
 ## 2026-08-01 릴리스 게이트 기준
 
-- 현장 검증 대상 구현 커밋은 `e416e7a7f9c311caa63dfd80e405a26843875811`이며, 기능 범위는 `d222a02684f3c6525df069ca532f09b81b8353e1..e416e7a7f9c311caa63dfd80e405a26843875811`이다.
-- 자동화 결과는 `swift test` 61/61 통과, Watch UI 3/3 통과, iPhone UI 7/8 통과다. iPhone 전체 UI suite는 기존 sign/export 경로가 timeline goal row를 탭한 뒤 event detail을 열지 못해 1개 test case가 실패했으므로 완전 통과로 표시하지 않는다.
+- 현장 검증 대상 구현 커밋은 `57c8b1d255fd1b3a77c744f4f15eb39f5e39c97c`이며, 기능 범위는 `d222a02684f3c6525df069ca532f09b81b8353e1..57c8b1d255fd1b3a77c744f4f15eb39f5e39c97c`이다.
+- 자동화 결과는 `swift test` 61/61 통과, iPhone UI 전체 8/8 통과, sign/export focused test 1/1 통과다. focused test는 timeline row에서 event detail을 열고 서명, PDF/XLSX 생성, share sheet 표시까지 완료했다. 이전 `e416e7a` iPhone 7/8 실패 기록은 `docs/DEVICE_ACCEPTANCE_EVIDENCE.md`에 superseded history로 보존한다.
+- Watch UI 3/3 통과는 이전 `e416e7a` 게이트 증거다. 이번 accessibility 업데이트에서는 Watch suite를 재실행하지 않았다.
 - clean DerivedData에서 iPhone과 Watch simulator build, install, launch를 확인했다. iPhone 1206×2622 screenshot에서 앱이 letterbox 없이 전체 화면을 사용했다.
 - clean install의 iPhone 첫 화면에서 한국어 기본값을 확인했고, 앱의 언어 선택 UI로 English를 선택한 뒤 영어 화면과 선택값 유지를 확인했다. Watch 한국어 화면도 확인했다.
 - 이 자동화 게이트는 paired hardware 현장 통과를 의미하지 않는다. 아래 표의 실제 경기 운영, 2초 측정, haptic 체감, 연결 해제/복구는 심판과 관찰자가 물리 기기에서 수행해야 한다.
