@@ -18,6 +18,7 @@
 		AC9BE489C7D8C422A37DE124 /* RefereePhoneApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE8F9866B860DC68A6D0125A /* RefereePhoneApp.swift */; };
 		C5F452C69DDD1369CF21ADA5 /* RefereeWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76DF939A4B7775B6C81E7DC /* RefereeWatchApp.swift */; };
 		DE3FE42383C9998C4BE4C2D3 /* RefereeLedger in Frameworks */ = {isa = PBXBuildFile; productRef = 08D7BDAC2E40FD2366A2A700 /* RefereeLedger */; };
+		E99CD5A64F637F4E52E25BCA /* RefereeWatchTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F82BCE789BFA7F1B6814ED4A /* RefereeWatchTheme.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -71,6 +72,7 @@
 		D474D3797435132E5F90778F /* RefereeTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RefereeTheme.swift; sourceTree = "<group>"; };
 		E76DF939A4B7775B6C81E7DC /* RefereeWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RefereeWatchApp.swift; sourceTree = "<group>"; };
 		F2C93AAFCB0F6D0AF2F24996 /* RefereePhone.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = RefereePhone.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F82BCE789BFA7F1B6814ED4A /* RefereeWatchTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RefereeWatchTheme.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -121,6 +123,7 @@
 			isa = PBXGroup;
 			children = (
 				E76DF939A4B7775B6C81E7DC /* RefereeWatchApp.swift */,
+				F82BCE789BFA7F1B6814ED4A /* RefereeWatchTheme.swift */,
 			);
 			name = Watch;
 			path = Apps/Watch;
@@ -319,6 +322,7 @@
 			files = (
 				7010A684F4F92F04FF9682CB /* RefereeCopy.swift in Sources */,
 				C5F452C69DDD1369CF21ADA5 /* RefereeWatchApp.swift in Sources */,
+				E99CD5A64F637F4E52E25BCA /* RefereeWatchTheme.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

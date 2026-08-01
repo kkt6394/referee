@@ -32,6 +32,7 @@ struct RefereeWatchApp: App {
             NavigationStack {
                 WatchMatchHomeView()
             }
+            .preferredColorScheme(.dark)
             .environmentObject(match)
             .environment(\.locale, Locale(identifier: language.rawValue))
             .environment(\.refereeCopy, RefereeCopy(language: language))
@@ -121,7 +122,8 @@ final class WatchMatchStore: NSObject, ObservableObject, WCSessionDelegate {
         let periodID = UUID(uuidString: "CCCCCCCC-CCCC-CCCC-CCCC-CCCCCCCCCCCC")!
         let fixture = MatchFixture(matchID: seededMatchID, competition: "Watch UI Acceptance",
                                    scheduledAt: Date(), venueName: "Offline Ground",
-                                   homeTeamName: "Seoul", awayTeamName: "Busan")
+                                   homeTeamName: "Seoul", awayTeamName: "Busan",
+                                   homeTeamColor: "#D32F2F", awayTeamColor: "#1565C0")
         let package = MatchPackage(
             fixture: fixture,
             projection: CompactMatchProjection(homeScore: 0, awayScore: 0, periodID: periodID,
@@ -437,67 +439,121 @@ struct WatchMatchHomeView: View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
             let elapsed = match.elapsed(at: context.date)
             ScrollView(.vertical) {
-                VStack(spacing: 7) {
-                HStack {
-                    Text(copy.periodLabel(match.periodLabel)).font(.caption2.weight(.bold)).foregroundStyle(.secondary)
-                    Spacer()
-                    Image(systemName: match.syncFailure != nil ? "exclamationmark.icloud" :
-                            (match.pendingSyncCount == 0 ? "checkmark.icloud" : "arrow.triangle.2.circlepath"))
-                        .foregroundStyle(match.syncFailure != nil ? Color.red : (match.pendingSyncCount == 0 ? Color.green : Color.orange))
-                }
-                Text(clock(elapsed, regulationDurationMs: match.regulationDurationMs)).font(.system(size: 36, weight: .bold, design: .rounded)).monospacedDigit()
-                HStack(spacing: 4) {
-                    Text("\(match.homeScore)").foregroundStyle(Color(hex: match.homeTeamColor))
-                    Text("–").foregroundStyle(.secondary)
-                    Text("\(match.awayScore)").foregroundStyle(Color(hex: match.awayTeamColor))
-                }.font(.title3.weight(.bold)).monospacedDigit()
-                if match.activePeriodID == nil {
-                    Label(match.periodLabel == "FULL TIME" ? copy.matchComplete : copy.holdToStart, systemImage: "play.fill")
-                        .font(.caption.weight(.semibold)).foregroundStyle(.green)
-                        .padding(.vertical, 6).frame(maxWidth: .infinity)
-                        .background(.green.opacity(0.15), in: Capsule())
-                        .onLongPressGesture(minimumDuration: 1) { match.startNextPeriod() }
-                        .disabled(match.periodLabel == "FULL TIME")
-                }
-                HStack(spacing: 6) {
-                    Button { selectedAction = .goal(elapsed) } label: { actionLabel(copy.goal, icon: "soccerball", tint: .green) }
-                        .buttonStyle(.plain)
-                        .accessibilityIdentifier("watch.action.goal")
-                    Button { selectedAction = .foul(elapsed) } label: { actionLabel(copy.foul, icon: "figure.soccer", tint: .orange) }
-                        .buttonStyle(.plain)
-                        .accessibilityIdentifier("watch.action.foul")
-                }
-                .disabled(match.activePeriodID == nil || !match.hasMatchPackage)
-                HStack(spacing: 6) {
-                    Button { selectedAction = .card(elapsed) } label: { actionLabel(copy.card, icon: "rectangle.fill", tint: .yellow) }
-                        .buttonStyle(.plain)
-                        .accessibilityIdentifier("watch.action.card")
-                    Button { selectedAction = .more(elapsed) } label: { actionLabel(copy.more, icon: "ellipsis", tint: .blue) }
-                        .buttonStyle(.plain)
-                }
-                .disabled(match.activePeriodID == nil || !match.hasMatchPackage)
-                if match.activePeriodID != nil {
-                    Label(copy.holdToEndPeriod, systemImage: "stop.fill")
-                        .font(.caption2.weight(.semibold)).foregroundStyle(.red)
-                        .onLongPressGesture(minimumDuration: 1) { match.endCurrentPeriod(at: context.date) }
-                }
-                    HStack(spacing: 4) {
+                VStack(spacing: RefereeWatchTheme.Layout.sectionSpacing) {
+                    VStack(spacing: RefereeWatchTheme.Layout.compactSpacing) {
+                        Text(copy.periodLabel(match.periodLabel))
+                            .font(RefereeWatchTheme.Typography.period)
+                            .foregroundStyle(RefereeWatchTheme.Colors.secondaryText)
+                            .accessibilityIdentifier("watch.period")
+                        Text(clock(elapsed, regulationDurationMs: match.regulationDurationMs))
+                            .font(RefereeWatchTheme.Typography.clock)
+                            .foregroundStyle(RefereeWatchTheme.Colors.primaryText)
+                            .monospacedDigit()
+                            .accessibilityIdentifier("watch.clock")
+                    }
+
+                    VStack(spacing: RefereeWatchTheme.Layout.compactSpacing) {
+                        HStack {
+                            teamBadge(name: match.homeTeamName, colorHex: match.homeTeamColor,
+                                      identifier: "watch.team.home")
+                            Spacer(minLength: RefereeWatchTheme.Layout.standardSpacing)
+                            teamBadge(name: match.awayTeamName, colorHex: match.awayTeamColor,
+                                      identifier: "watch.team.away")
+                        }
+                        score(home: match.homeScore, away: match.awayScore)
+                    }
+                    .padding(.horizontal, RefereeWatchTheme.Layout.standardSpacing)
+                    .padding(.vertical, RefereeWatchTheme.Layout.compactSpacing)
+                    .background(RefereeWatchTheme.Colors.surface,
+                                in: RoundedRectangle(cornerRadius: RefereeWatchTheme.Layout.cornerRadius,
+                                                     style: .continuous))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: RefereeWatchTheme.Layout.cornerRadius, style: .continuous)
+                            .stroke(RefereeWatchTheme.Colors.outline, lineWidth: 1)
+                    }
+
+                    HStack(spacing: RefereeWatchTheme.Layout.compactSpacing) {
+                        Image(systemName: match.syncFailure != nil ? "exclamationmark.icloud" :
+                                (match.pendingSyncCount == 0 ? "checkmark.icloud" : "arrow.triangle.2.circlepath"))
+                            .foregroundStyle(syncColor)
                         Text("\(copy.syncStatus(peer: "iPhone", reachable: match.isPhoneReachable, pending: match.pendingSyncCount, failed: match.syncFailure != nil)) · \(copy.queueStatus(match.pendingSyncCount))")
-                            .font(.caption2).foregroundStyle(match.syncFailure == nil ? Color.secondary : Color.red).lineLimit(2)
+                            .font(RefereeWatchTheme.Typography.status)
+                            .foregroundStyle(match.syncFailure == nil ? RefereeWatchTheme.Colors.secondaryText : RefereeWatchTheme.Colors.danger)
+                            .lineLimit(2)
                             .accessibilityIdentifier("watch.sync.status")
+                        Spacer(minLength: 0)
                         if match.pendingSyncCount > 0 || match.syncFailure != nil {
                             Button { match.retrySynchronization() } label: { Image(systemName: "arrow.clockwise") }
-                                .buttonStyle(.plain).accessibilityLabel(copy.retryPhoneSync)
+                                .buttonStyle(.plain)
+                                .frame(minWidth: RefereeWatchTheme.Layout.minimumTouchTarget,
+                                       minHeight: RefereeWatchTheme.Layout.minimumTouchTarget)
+                                .accessibilityLabel(copy.retryPhoneSync)
                         }
                     }
+                    .padding(.horizontal, RefereeWatchTheme.Layout.standardSpacing)
+                    .frame(maxWidth: .infinity, minHeight: RefereeWatchTheme.Layout.minimumTouchTarget,
+                           alignment: .leading)
+                    .background(RefereeWatchTheme.Colors.elevatedSurface,
+                                in: RoundedRectangle(cornerRadius: RefereeWatchTheme.Layout.cornerRadius,
+                                                     style: .continuous))
+
                     if match.saveConfirmation != nil {
                         Text(copy.savedLocally(queue: match.pendingSyncCount))
-                            .font(.caption2.weight(.semibold)).foregroundStyle(.green)
+                            .font(RefereeWatchTheme.Typography.status)
+                            .foregroundStyle(RefereeWatchTheme.Colors.success)
                             .accessibilityIdentifier("watch.save.confirmation")
                     }
+
+                    if match.activePeriodID == nil {
+                        Label(match.periodLabel == "FULL TIME" ? copy.matchComplete : copy.holdToStart,
+                              systemImage: "play.fill")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(RefereeWatchTheme.Colors.success)
+                            .frame(maxWidth: .infinity, minHeight: RefereeWatchTheme.Layout.minimumTouchTarget)
+                            .background(RefereeWatchTheme.Colors.success.opacity(0.15), in: Capsule())
+                            .onLongPressGesture(minimumDuration: 1) { match.startNextPeriod() }
+                            .disabled(match.periodLabel == "FULL TIME")
+                    }
+
+                    VStack(spacing: RefereeWatchTheme.Layout.standardSpacing) {
+                        HStack(spacing: RefereeWatchTheme.Layout.standardSpacing) {
+                            Button { selectedAction = .goal(elapsed) } label: {
+                                actionLabel(copy.goal, icon: "soccerball", tint: RefereeWatchTheme.Colors.success)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityIdentifier("watch.action.goal")
+                            Button { selectedAction = .foul(elapsed) } label: {
+                                actionLabel(copy.foul, icon: "figure.soccer", tint: RefereeWatchTheme.Colors.warning)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityIdentifier("watch.action.foul")
+                        }
+                        HStack(spacing: RefereeWatchTheme.Layout.standardSpacing) {
+                            Button { selectedAction = .card(elapsed) } label: {
+                                actionLabel(copy.card, icon: "rectangle.fill", tint: RefereeWatchTheme.Colors.card)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityIdentifier("watch.action.card")
+                            Button { selectedAction = .more(elapsed) } label: {
+                                actionLabel(copy.more, icon: "ellipsis", tint: RefereeWatchTheme.Colors.accent)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .disabled(match.activePeriodID == nil || !match.hasMatchPackage)
+
+                    if match.activePeriodID != nil {
+                        Label(copy.holdToEndPeriod, systemImage: "stop.fill")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(RefereeWatchTheme.Colors.danger)
+                            .frame(minHeight: RefereeWatchTheme.Layout.minimumTouchTarget)
+                            .onLongPressGesture(minimumDuration: 1) { match.endCurrentPeriod(at: context.date) }
+                    }
                 }
+                .padding(.horizontal, RefereeWatchTheme.Layout.horizontalPadding)
                 .padding(.bottom, 4)
             }
+            .background(RefereeWatchTheme.Colors.background)
         }
         .navigationDestination(isPresented: Binding(
             get: { selectedAction != nil },
@@ -523,13 +579,51 @@ struct WatchMatchHomeView: View {
     }
 
     private func actionLabel(_ title: String, icon: String, tint: Color) -> some View {
-        VStack(spacing: 3) {
-            Image(systemName: icon).font(.headline.weight(.bold))
-            Text(title).font(.caption2.weight(.bold))
+        VStack(spacing: RefereeWatchTheme.Layout.compactSpacing) {
+            Image(systemName: icon)
+                .font(.headline.weight(.bold))
+                .foregroundStyle(tint)
+            Text(title)
+                .font(RefereeWatchTheme.Typography.action)
+                .foregroundStyle(RefereeWatchTheme.Colors.primaryText)
         }
-        .frame(maxWidth: .infinity, minHeight: 44)
-        .foregroundStyle(.white)
-        .background(tint.gradient, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+        .frame(maxWidth: .infinity, minHeight: RefereeWatchTheme.Layout.liveActionHeight)
+        .background(tint.opacity(0.18),
+                    in: RoundedRectangle(cornerRadius: RefereeWatchTheme.Layout.cornerRadius,
+                                         style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: RefereeWatchTheme.Layout.cornerRadius, style: .continuous)
+                .stroke(tint.opacity(0.7), lineWidth: 1)
+        }
+    }
+
+    private var syncColor: Color {
+        if match.syncFailure != nil { return RefereeWatchTheme.Colors.danger }
+        return match.pendingSyncCount == 0 ? RefereeWatchTheme.Colors.success : RefereeWatchTheme.Colors.warning
+    }
+
+    private func teamBadge(name: String, colorHex: String?, identifier: String) -> some View {
+        let resolvedColor = colorHex ?? "#1565C0"
+        return HStack(spacing: RefereeWatchTheme.Layout.compactSpacing) {
+            Circle().fill(Color(hex: resolvedColor)).frame(width: 9, height: 9)
+            Text(name)
+                .font(RefereeWatchTheme.Typography.team)
+                .foregroundStyle(RefereeWatchTheme.Colors.primaryText)
+                .lineLimit(1)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(name), \(copy.kitColorName(resolvedColor))")
+        .accessibilityIdentifier(identifier)
+    }
+
+    private func score(home: Int, away: Int) -> some View {
+        (Text("\(home)").foregroundColor(Color(hex: match.homeTeamColor))
+         + Text("–").foregroundColor(RefereeWatchTheme.Colors.secondaryText)
+         + Text("\(away)").foregroundColor(Color(hex: match.awayTeamColor)))
+            .font(RefereeWatchTheme.Typography.score)
+            .monospacedDigit()
+            .accessibilityLabel("\(home)–\(away)")
+            .accessibilityIdentifier("watch.score")
     }
 }
 

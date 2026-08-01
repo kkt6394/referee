@@ -2,6 +2,33 @@ import XCTest
 
 final class RefereeWatchUITests: XCTestCase {
     @MainActor
+    func testKoreanLiveHierarchyLocalizesPeriodScoreAndTeamColors() throws {
+        let app = XCUIApplication()
+        app.launchEnvironment["REFEREE_WATCH_UI_TEST_DATABASE"] = UUID().uuidString
+        app.launchEnvironment["REFEREE_WATCH_UI_TEST_SEED"] = "fixture"
+        app.launchEnvironment["REFEREE_WATCH_UI_TEST_LANGUAGE"] = "ko"
+        app.launch()
+
+        let period = app.staticTexts["watch.period"]
+        XCTAssertTrue(period.waitForExistence(timeout: 5))
+        XCTAssertEqual(period.label, "전반")
+        XCTAssertEqual(app.staticTexts["watch.score"].label, "0–0")
+        XCTAssertEqual(app.descendants(matching: .any)["watch.team.home"].label, "Seoul, 빨강")
+        XCTAssertEqual(app.descendants(matching: .any)["watch.team.away"].label, "Busan, 파랑")
+
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "Watch live hierarchy — Korean"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+
+        app.swipeUp()
+        let actionsScreenshot = XCTAttachment(screenshot: app.screenshot())
+        actionsScreenshot.name = "Watch live actions — Korean"
+        actionsScreenshot.lifetime = .keepAlways
+        add(actionsScreenshot)
+    }
+
+    @MainActor
     func testDirectRedRequiresHoldThenReturnsToLiveClockWithQueuedSave() throws {
         let app = XCUIApplication()
         app.launchEnvironment["REFEREE_WATCH_UI_TEST_DATABASE"] = UUID().uuidString
@@ -39,7 +66,9 @@ final class RefereeWatchUITests: XCTestCase {
         XCTAssertTrue(waitForExistence(foul, timeout: 2))
         XCTAssertLessThan(Date().timeIntervalSince(startedAt), 2,
                           "Foul capture must return home within two seconds")
-        XCTAssertTrue(app.staticTexts["watch.save.confirmation"].waitForExistence(timeout: 2))
+        let confirmation = app.staticTexts["watch.save.confirmation"]
+        XCTAssertTrue(confirmation.waitForExistence(timeout: 2))
+        XCTAssertEqual(confirmation.label, "Saved locally · Queue 1")
         XCTAssertTrue(app.staticTexts["watch.sync.status"].label.contains("Queue 1"))
 
         app.terminate()
