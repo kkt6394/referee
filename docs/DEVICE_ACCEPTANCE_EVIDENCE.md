@@ -2,9 +2,11 @@
 
 ## 2026-08-01 — Final review localization and Watch target rerun
 
-- The final-review implementation is based on `e47ef1a` and adds presentation-only
-  mappings; persisted ledger/protocol values and accessibility identifiers remain
-  unchanged.
+- Current tested implementation head:
+  `43bc55033e90fb569046d543ee276efd1c317309`
+  (`fix: localize system values and Watch red targets`). It adds
+  presentation-only mappings; persisted ledger/protocol values and
+  accessibility identifiers remain unchanged.
 - `swift test` passed 61/61 tests with zero failures: 3 XCTest
   `AppLanguageTests` plus 58 Swift Testing `LedgerStoreTests`.
 - The full `RefereePhoneUITests` suite passed 9/9 with zero failures and zero
