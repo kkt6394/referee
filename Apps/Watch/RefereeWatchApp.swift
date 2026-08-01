@@ -679,12 +679,12 @@ private struct CardActionView: View {
             }
             Section(copy.directRedHold) {
                 Text(match.homeTeamName)
-                    .frame(maxWidth: .infinity, minHeight: 36)
+                    .frame(maxWidth: .infinity, minHeight: RefereeWatchTheme.Layout.minimumTouchTarget)
                     .contentShape(Rectangle())
                     .onLongPressGesture(minimumDuration: 1) { match.saveCard(side: "home", colour: "red", matchClockMs: matchClockMs); dismiss() }
                     .accessibilityIdentifier("watch.card.red.home")
                 Text(match.awayTeamName)
-                    .frame(maxWidth: .infinity, minHeight: 36)
+                    .frame(maxWidth: .infinity, minHeight: RefereeWatchTheme.Layout.minimumTouchTarget)
                     .contentShape(Rectangle())
                     .onLongPressGesture(minimumDuration: 1) { match.saveCard(side: "away", colour: "red", matchClockMs: matchClockMs); dismiss() }
                     .accessibilityIdentifier("watch.card.red.away")

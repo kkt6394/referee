@@ -206,15 +206,41 @@ struct RefereeCopy: Sendable {
     }
 
     func enumValue(_ rawValue: String) -> String {
-        let fallback = rawValue.replacingOccurrences(of: "_", with: " ").capitalized
-        guard usesKorean else { return fallback }
-        return ["pending": "대기 중", "scored": "득점", "missed": "실패", "saved": "선방",
-                "post": "골대", "retake": "재시도", "confirmed": "확정", "overturned": "번복",
-                "no_change": "변경 없음", "cancelled": "취소", "yellow": "경고", "red": "퇴장",
-                "direct_red": "직접 퇴장", "mistaken_identity": "대상 선수 착오", "other": "기타",
-                "started": "시작", "resumed": "재개", "kickoff": "킥오프", "free_kick": "프리킥",
-                "penalty_kick": "페널티킥", "throw_in": "스로인", "goal_kick": "골킥",
-                "corner_kick": "코너킥", "dropped_ball": "드롭볼"][rawValue] ?? fallback
+        let values: [String: (korean: String, english: String)] = [
+            "pending": ("대기 중", "Pending"), "scored": ("득점", "Scored"),
+            "missed": ("실패", "Missed"), "saved": ("선방", "Saved"),
+            "post": ("골대", "Post"), "retake": ("재시도", "Retake"),
+            "confirmed": ("확정", "Confirmed"), "overturned": ("번복", "Overturned"),
+            "no_change": ("변경 없음", "No Change"), "cancelled": ("취소", "Cancelled"),
+            "yellow": ("경고", "Yellow"), "red": ("퇴장", "Red"),
+            "goal": ("득점", "Goal"), "penalty": ("페널티", "Penalty"),
+            "direct_red": ("직접 퇴장", "Direct Red"),
+            "mistaken_identity": ("대상 선수 착오", "Mistaken Identity"), "other": ("기타", "Other"),
+            "started": ("시작", "Started"), "resumed": ("재개", "Resumed"),
+            "kickoff": ("킥오프", "Kickoff"), "free_kick": ("프리킥", "Free Kick"),
+            "penalty_kick": ("페널티킥", "Penalty Kick"), "throw_in": ("스로인", "Throw In"),
+            "goal_kick": ("골킥", "Goal Kick"), "corner_kick": ("코너킥", "Corner Kick"),
+            "dropped_ball": ("드롭볼", "Dropped Ball"), "match": ("경기", "Match"),
+            "shootout": ("승부차기", "Shootout"),
+            "first_half": ("전반", "First Half"), "second_half": ("후반", "Second Half"),
+            "extra_time_first_half": ("연장 전반", "Extra Time First Half"),
+            "extra_time_second_half": ("연장 후반", "Extra Time Second Half"),
+            "injury": ("부상", "Injury"), "var": ("VAR", "VAR"),
+            "delayed_restart": ("경기 재개 지연", "Delayed Restart"),
+            "weather": ("기상", "Weather"), "crowd_control": ("관중 통제", "Crowd Control"),
+            "match_interruption": ("경기 중단", "Match Interruption"),
+            "defending_third": ("수비 진영", "Defending Third"),
+            "middle_third": ("중원", "Middle Third"), "attacking_third": ("공격 진영", "Attacking Third"),
+            "left_channel": ("왼쪽 채널", "Left Channel"),
+            "centre_channel": ("중앙 채널", "Centre Channel"), "right_channel": ("오른쪽 채널", "Right Channel"),
+            "penalty_area": ("페널티 에어리어", "Penalty Area"), "goal_area": ("골 에어리어", "Goal Area"),
+            "pitch_tap": ("구장 탭", "Pitch Tap"), "gps_assisted": ("GPS 보조", "GPS-assisted"),
+            "later_correction": ("추후 수정", "Later Correction"),
+            "referee_confirmed": ("심판 확인", "Referee Confirmed"),
+            "estimated": ("추정", "Estimated"), "unconfirmed": ("미확인", "Unconfirmed")
+        ]
+        guard let value = values[rawValue] else { return rawValue }
+        return usesKorean ? value.korean : value.english
     }
 
     // Post-match reports
@@ -348,7 +374,9 @@ struct RefereeCopy: Sendable {
             "Event corrected": "이벤트를 수정했습니다", "Could not read the original event": "원본 이벤트를 읽을 수 없습니다",
             "Could not encode match action": "경기 액션을 인코딩할 수 없습니다", "Match is already complete": "경기가 이미 종료되었습니다",
             "Attachment stored and checksum verified": "첨부 파일을 저장하고 체크섬을 확인했습니다",
-            "Watch session is not active": "Watch 세션이 활성 상태가 아닙니다"
+            "Watch session is not active": "Watch 세션이 활성 상태가 아닙니다",
+            "Could not read the local sync queue": "로컬 동기화 대기열을 읽을 수 없습니다",
+            "Could not read pending Watch events": "대기 중인 Watch 이벤트를 읽을 수 없습니다"
         ]
         if let localized = exact[value] { return localized }
         let errorPrefixes = [

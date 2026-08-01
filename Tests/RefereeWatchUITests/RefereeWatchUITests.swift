@@ -29,7 +29,7 @@ final class RefereeWatchUITests: XCTestCase {
     }
 
     @MainActor
-    func testDirectRedRequiresHoldThenReturnsToLiveClockWithQueuedSave() throws {
+    func testDirectRedUsesMinimumTargetRejectsTapThenSavesAfterHold() throws {
         let app = XCUIApplication()
         app.launchEnvironment["REFEREE_WATCH_UI_TEST_DATABASE"] = UUID().uuidString
         app.launchEnvironment["REFEREE_WATCH_UI_TEST_SEED"] = "fixture"
@@ -38,9 +38,24 @@ final class RefereeWatchUITests: XCTestCase {
 
         let foul = app.buttons["watch.action.foul"]
         XCTAssertTrue(foul.waitForExistence(timeout: 5))
+        if !foul.isEnabled {
+            let start = app.staticTexts.matching(NSPredicate(
+                format: "label == 'Hold to start' OR label == '길게 눌러 시작'"
+            )).firstMatch
+            XCTAssertTrue(start.waitForExistence(timeout: 2))
+            start.press(forDuration: 1.1)
+            expectation(for: NSPredicate(format: "isEnabled == true"), evaluatedWith: foul)
+            waitForExpectations(timeout: 3)
+        }
         app.buttons["watch.action.card"].tap()
         let red = app.staticTexts["watch.card.red.home"]
         XCTAssertTrue(red.waitForExistence(timeout: 2))
+        XCTAssertGreaterThanOrEqual(red.frame.height, 44)
+
+        red.tap()
+        XCTAssertFalse(app.staticTexts["watch.save.confirmation"].waitForExistence(timeout: 1))
+        XCTAssertTrue(red.exists)
+
         red.press(forDuration: 1.1)
 
         XCTAssertTrue(app.staticTexts["watch.save.confirmation"].waitForExistence(timeout: 2))

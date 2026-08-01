@@ -25,11 +25,18 @@ final class RefereePhoneUITests: XCTestCase {
         let app = launchSeededFixture(language: "ko")
         saveFixture(in: app)
 
-        XCTAssertTrue(app.descendants(matching: .any)["match.period.start"].waitForExistence(timeout: 3))
+        let startPeriod = app.descendants(matching: .any)["match.period.start"]
+        XCTAssertTrue(startPeriod.waitForExistence(timeout: 3))
+        startPeriod.press(forDuration: 1.2)
+        XCTAssertTrue(app.staticTexts["전반"].waitForExistence(timeout: 3))
         scrollToElement(app.buttons["match.timeline"], in: app).tap()
 
         XCTAssertTrue(app.navigationBars["경기 기록"].waitForExistence(timeout: 3))
-        XCTAssertTrue(app.staticTexts["아직 경기 기록이 없습니다"].exists)
+        let periodStarted = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier BEGINSWITH 'timeline.period_started.'")).firstMatch
+        XCTAssertTrue(periodStarted.waitForExistence(timeout: 3))
+        XCTAssertTrue(periodStarted.label.contains("전반"))
+        XCTAssertFalse(periodStarted.label.contains("First Half"))
     }
 
     @MainActor
@@ -40,6 +47,16 @@ final class RefereePhoneUITests: XCTestCase {
         XCTAssertTrue(app.descendants(matching: .any)["match.period.start"].waitForExistence(timeout: 3))
         XCTAssertTrue(app.staticTexts["Watch 세션이 활성 상태가 아닙니다"].waitForExistence(timeout: 3))
         XCTAssertFalse(app.staticTexts["Watch session is not active"].exists)
+    }
+
+    @MainActor
+    func testKoreanLocalizesQueueReadSyncFailure() throws {
+        let app = launchSeededFixture(language: "ko", syncFailure: "Could not read the local sync queue")
+        saveFixture(in: app)
+
+        XCTAssertTrue(app.descendants(matching: .any)["match.period.start"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["로컬 동기화 대기열을 읽을 수 없습니다"].waitForExistence(timeout: 3))
+        XCTAssertFalse(app.staticTexts["Could not read the local sync queue"].exists)
     }
 
     @MainActor

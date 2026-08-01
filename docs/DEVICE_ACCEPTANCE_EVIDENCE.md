@@ -1,5 +1,28 @@
 # Device Acceptance Evidence
 
+## 2026-08-01 — Final review localization and Watch target rerun
+
+- The final-review implementation is based on `e47ef1a` and adds presentation-only
+  mappings; persisted ledger/protocol values and accessibility identifiers remain
+  unchanged.
+- `swift test` passed 61/61 tests with zero failures: 3 XCTest
+  `AppLanguageTests` plus 58 Swift Testing `LedgerStoreTests`.
+- The full `RefereePhoneUITests` suite passed 9/9 with zero failures and zero
+  skips on `Referee-iPhone` (iPhone 16 Pro simulator, iOS 18.3.1) in 243.688
+  seconds. The new Korean regressions verified that a local sync-queue read
+  failure does not expose its English protocol message and that a real
+  `period_started` timeline row shows `전반`, not `First Half`. Result bundle:
+  `/private/tmp/referee-final-phone-full/Logs/Test/Test-RefereePhone-2026.08.01_16-19-13-+0900.xcresult`.
+- The full `RefereeWatchUITests` suite passed 3/3 with zero failures and zero
+  skips on Apple Watch Series 11 (46 mm), watchOS 26.2, in 35.258 seconds. The
+  direct-red regression verified an effective target of at least 44 points, no
+  save after a short tap, and a queued save plus return to live after the
+  one-second hold. Result bundle:
+  `/private/tmp/referee-final-watch-full/Logs/Test/Test-RefereeWatch-2026.08.01_16-23-49-+0900.xcresult`.
+- No paired-hardware pilot completion is claimed. Simulator automation does not
+  attest physical haptics, representative-motion timing, or physical
+  disconnect/reconnect behavior.
+
 ## 2026-08-01 — Timeline detail accessibility rerun
 
 - Current tested implementation head:

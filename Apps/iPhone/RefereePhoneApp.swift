@@ -1911,13 +1911,13 @@ private struct PhoneTimelineView: View {
     private func detail(_ entry: MatchTimelineEntry) -> String? {
         guard var object = try? JSONSerialization.jsonObject(with: Data(entry.payloadJSON.utf8)) as? [String: Any] else { return nil }
         if let replacement = object["replacementPayload"] as? [String: Any] { object = replacement }
-        if let reason = object["reason"] as? String { return reason }
+        if let reason = object["reason"] as? String { return copy.enumValue(reason) }
         var parts: [String] = []
         if let side = object["teamSide"] as? String { parts.append(side == "home" ? match.homeTeam : match.awayTeam) }
         if let colour = object["colour"] as? String { parts.append(copy.enumValue(colour)) }
         if let player = object["participantDisplayName"] as? String { parts.append(player) }
         if let discipline = object["disciplinaryReason"] as? String { parts.append(discipline) }
-        if let cause = object["cause"] as? String { parts.append(cause.replacingOccurrences(of: "_", with: " ").capitalized) }
+        if let cause = object["cause"] as? String { parts.append(copy.enumValue(cause)) }
         if let player = object["playerOutDisplayName"] as? String { parts.append("\(copy.detailPrefix("Out")): \(player)") }
         if let player = object["playerInDisplayName"] as? String { parts.append("\(copy.detailPrefix("In")): \(player)") }
         if let outcome = object["outcome"] as? String { parts.append(copy.enumValue(outcome)) }
@@ -1926,7 +1926,7 @@ private struct PhoneTimelineView: View {
         if let restart = object["restartType"] as? String { parts.append(copy.enumValue(restart)) }
         if let kind = object["periodKind"] as? String { parts.append(copy.enumValue(kind)) }
         if let regions = object["regions"] as? [String] {
-            parts.append(regions.map { $0.replacingOccurrences(of: "_", with: " ").capitalized }.joined(separator: ", "))
+            parts.append(regions.map(copy.enumValue).joined(separator: ", "))
         }
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
