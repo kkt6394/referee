@@ -1807,7 +1807,24 @@ private struct PhoneTimelineView: View {
         }
     }
 
+    @ViewBuilder
     private func timelineRow(_ entry: MatchTimelineEntry) -> some View {
+        if entry.isActive && detailTypes.contains(entry.eventType) {
+            Button { detailEntry = entry } label: {
+                timelineRowContent(entry)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("timeline.\(entry.eventType).\(entry.eventID.uuidString)")
+        } else {
+            timelineRowContent(entry)
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("timeline.\(entry.eventType).\(entry.eventID.uuidString)")
+        }
+    }
+
+    private func timelineRowContent(_ entry: MatchTimelineEntry) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon(entry.eventType))
                 .frame(width: 24).foregroundStyle(entry.isActive ? Color.accentColor : .secondary)
@@ -1827,13 +1844,6 @@ private struct PhoneTimelineView: View {
         }
         .opacity(entry.isActive ? 1 : 0.6)
         .contentShape(Rectangle())
-        .onTapGesture {
-            if entry.isActive && detailTypes.contains(entry.eventType) {
-                detailEntry = entry
-            }
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityIdentifier("timeline.\(entry.eventType).\(entry.eventID.uuidString)")
     }
 
     private func canCorrect(_ entry: MatchTimelineEntry) -> Bool {
