@@ -25,9 +25,9 @@
   attest physical haptics, representative-motion timing, or physical
   disconnect/reconnect behavior.
 
-## 2026-08-01 — Timeline detail accessibility rerun
+## 2026-08-01 — Timeline detail accessibility rerun (historical; superseded by `43bc550`)
 
-- Current tested implementation head:
+- Implementation head for this historical rerun:
   `57c8b1d255fd1b3a77c744f4f15eb39f5e39c97c`
   (`fix: make timeline detail rows accessible`).
 - `swift test` passed 61/61 tests with zero failures: 3 XCTest
@@ -41,12 +41,13 @@
 - The full `RefereePhoneUITests` suite passed 8/8 with zero failures and zero
   skips on the same simulator in 172.309 seconds. Result bundle:
   `/private/tmp/referee-task5-phone-57c8b1d.xcresult`.
-- This rerun supersedes the iPhone 7/8 result recorded below for
-  `e416e7a`. The earlier failure remains retained as historical evidence; it
-  is not the current iPhone gate result.
-- The Watch 3/3 result, clean-build/install evidence, language screenshots,
-  and their limitations remain documented in the earlier gate record below;
-  the Watch suite was not rerun as part of this iPhone accessibility update.
+- At the time, this rerun superseded the iPhone 7/8 result recorded below for
+  `e416e7a`. Both records are now historical; the final `43bc550` acceptance
+  run documented above is the current iPhone gate result.
+- During this historical `57c8b1d` accessibility rerun, the Watch suite was
+  not rerun; its then-applicable 3/3 result came from the earlier `e416e7a`
+  gate record below. The final `43bc550` acceptance run above subsequently
+  reran the Watch suite and passed 3/3.
 - No paired-hardware pilot completion is claimed. A human referee and observer
   must still complete `docs/FIELD_TEST_PROTOCOL.md`; simulator automation does
   not attest physical haptics, representative-motion timing, or physical
