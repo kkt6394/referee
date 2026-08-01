@@ -73,6 +73,18 @@ final class RefereePhoneUITests: XCTestCase {
 
         let review = scrollToElement(app.buttons["match.review"], in: app)
         XCTAssertTrue(review.exists)
+        XCTAssertEqual(review.value as? String, "Secondary action")
+    }
+
+    @MainActor
+    func testUnavailableReadinessNeverAppearsReady() throws {
+        let app = launchSeededFixture(language: "en", readinessUnavailable: true)
+        saveFixture(in: app)
+
+        let readiness = app.descendants(matching: .any)["match.readiness"]
+        XCTAssertTrue(readiness.waitForExistence(timeout: 3))
+        XCTAssertEqual(readiness.label, "Readiness unavailable")
+        XCTAssertFalse(readiness.label.contains("Ready"))
     }
 
     @MainActor
@@ -161,12 +173,14 @@ final class RefereePhoneUITests: XCTestCase {
     }
 
     @MainActor
-    private func launchSeededFixture(language: String = "en", syncFailure: String? = nil) -> XCUIApplication {
+    private func launchSeededFixture(language: String = "en", syncFailure: String? = nil,
+                                     readinessUnavailable: Bool = false) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchEnvironment["REFEREE_UI_TEST_DATABASE"] = UUID().uuidString
         app.launchEnvironment["REFEREE_UI_TEST_SEED"] = "fixture"
         app.launchEnvironment["REFEREE_UI_TEST_LANGUAGE"] = language
         if let syncFailure { app.launchEnvironment["REFEREE_UI_TEST_SYNC_FAILURE"] = syncFailure }
+        if readinessUnavailable { app.launchEnvironment["REFEREE_UI_TEST_READINESS_UNAVAILABLE"] = "1" }
         app.launch()
         app.buttons["matches.create"].tap()
         XCTAssertEqual(app.textFields["fixture.competition"].value as? String, "KFA UI League")

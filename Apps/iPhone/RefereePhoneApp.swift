@@ -234,6 +234,12 @@ final class PhoneMatchStore: NSObject, ObservableObject, WCSessionDelegate {
     }
 
     func refreshFieldReadiness() {
+#if DEBUG
+        if ProcessInfo.processInfo.environment["REFEREE_UI_TEST_READINESS_UNAVAILABLE"] == "1" {
+            fieldReadiness = nil
+            return
+        }
+#endif
         fieldReadiness = try? ledger?.fieldReadiness(matchID: matchID)
     }
 
@@ -1136,7 +1142,9 @@ struct PhoneMatchControlView: View {
                     Spacer()
                 }
                 .refereeCard(padding: RefereeTheme.Spacing.standard)
-                .accessibilityElement(children: .contain)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(readinessTitle)
+                .accessibilityHint(copy.readinessGuidance)
                 .accessibilityIdentifier("match.readiness")
 
                 HStack(alignment: .top, spacing: 10) {
@@ -1220,15 +1228,11 @@ struct PhoneMatchControlView: View {
                 }
                 .buttonStyle(.bordered)
                 .accessibilityIdentifier("match.setup")
-                NavigationLink {
-                    PhonePostMatchReviewView()
-                } label: {
-                    Label(match.periodLabel == "FULL TIME" ? copy.reviewAndSignReports : copy.reportReadiness,
-                          systemImage: "checkmark.seal")
-                        .frame(maxWidth: .infinity)
+                if match.periodLabel == "FULL TIME" {
+                    reviewEntry.buttonStyle(.borderedProminent)
+                } else {
+                    reviewEntry.buttonStyle(.bordered)
                 }
-                .buttonStyle(.borderedProminent)
-                .accessibilityIdentifier("match.review")
                 if match.activePeriodID != nil {
                     Label(copy.holdToEndPeriod, systemImage: "stop.fill")
                         .font(.subheadline.weight(.semibold)).foregroundStyle(.red)
@@ -1261,16 +1265,51 @@ struct PhoneMatchControlView: View {
 #endif
     }
 
+    private enum ReadinessPresentation {
+        case ready
+        case blocked
+        case unavailable
+    }
+
+    private var readinessPresentation: ReadinessPresentation {
+        guard let readiness = match.fieldReadiness else { return .unavailable }
+        return readiness.canStartMatch ? .ready : .blocked
+    }
+
     private var readinessTitle: String {
-        match.fieldReadiness?.canStartMatch == false ? copy.completeBeforeStarting : copy.ready
+        switch readinessPresentation {
+        case .ready: copy.ready
+        case .blocked: copy.completeBeforeStarting
+        case .unavailable: copy.readinessUnavailable
+        }
     }
 
     private var readinessIcon: String {
-        match.fieldReadiness?.canStartMatch == false ? "xmark.octagon.fill" : "checkmark.circle.fill"
+        switch readinessPresentation {
+        case .ready: "checkmark.circle.fill"
+        case .blocked: "xmark.octagon.fill"
+        case .unavailable: "questionmark.circle.fill"
+        }
     }
 
     private var readinessColor: Color {
-        match.fieldReadiness?.canStartMatch == false ? RefereeTheme.Colors.blocking : RefereeTheme.Colors.success
+        switch readinessPresentation {
+        case .ready: RefereeTheme.Colors.success
+        case .blocked: RefereeTheme.Colors.blocking
+        case .unavailable: RefereeTheme.Colors.warning
+        }
+    }
+
+    private var reviewEntry: some View {
+        NavigationLink {
+            PhonePostMatchReviewView()
+        } label: {
+            Label(match.periodLabel == "FULL TIME" ? copy.reviewAndSignReports : copy.reportReadiness,
+                  systemImage: "checkmark.seal")
+                .frame(maxWidth: .infinity)
+        }
+        .accessibilityValue(match.periodLabel == "FULL TIME" ? copy.primaryAction : copy.secondaryAction)
+        .accessibilityIdentifier("match.review")
     }
 
     private func score(team: String, score: Int, colorHex: String, identifier: String) -> some View {

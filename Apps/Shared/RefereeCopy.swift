@@ -41,6 +41,7 @@ struct RefereeCopy: Sendable {
     var extraTimeEnabled: String { text("연장전 사용", "Extra time enabled") }
     var standardPeriods: String { text("표준 경기 시간", "Standard periods") }
     var completeBeforeStarting: String { text("시작 전 필수 사항", "Complete before starting") }
+    var readinessUnavailable: String { text("준비 상태 확인 불가", "Readiness unavailable") }
     var recommendedBeforeKickOff: String { text("경기 전 권장 사항", "Recommended before kick-off") }
     var readinessGuidance: String {
         text("필수 준비가 완료되어야 경기 제어를 시작할 수 있습니다. 권장 사항은 나중에 완료해도 되지만, 보고서 서명 전에 필수 정보를 다시 확인합니다.",
@@ -110,6 +111,8 @@ struct RefereeCopy: Sendable {
     var eventTimeline: String { text("경기 기록", "Event timeline") }
     var reportReadiness: String { text("보고서 준비", "Report readiness") }
     var reviewAndSignReports: String { text("보고서 검토 및 서명", "Review and sign reports") }
+    var primaryAction: String { text("주요 작업", "Primary action") }
+    var secondaryAction: String { text("보조 작업", "Secondary action") }
     var matchComplete: String { text("경기 종료", "Match complete") }
     var holdToStart: String { text("길게 눌러 시작", "Hold to start") }
     func holdToStart(_ period: String) -> String { text("길게 눌러 \(period) 시작", "Hold to start \(period.lowercased())") }
