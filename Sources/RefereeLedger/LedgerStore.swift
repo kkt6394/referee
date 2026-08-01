@@ -28,7 +28,9 @@ public final class LedgerStore: @unchecked Sendable {
         guard sqlite3_open_v2(path, &database, SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX, nil) == SQLITE_OK else { throw LedgerError.sqlite("open") }
         try FileManager.default.createDirectory(at: self.attachmentRoot, withIntermediateDirectories: true)
         try execute("PRAGMA foreign_keys = ON;")
-        try execute("CREATE TABLE IF NOT EXISTS match_fixture (id TEXT PRIMARY KEY, competition TEXT NOT NULL, scheduled_at TEXT NOT NULL, venue_name TEXT NOT NULL, home_team_name TEXT NOT NULL, away_team_name TEXT NOT NULL, CHECK(home_team_name <> away_team_name));")
+        try execute("CREATE TABLE IF NOT EXISTS match_fixture (id TEXT PRIMARY KEY, competition TEXT NOT NULL, scheduled_at TEXT NOT NULL, venue_name TEXT NOT NULL, home_team_name TEXT NOT NULL, away_team_name TEXT NOT NULL, home_team_color TEXT, away_team_color TEXT, CHECK(home_team_name <> away_team_name));")
+        try? execute("ALTER TABLE match_fixture ADD COLUMN home_team_color TEXT;")
+        try? execute("ALTER TABLE match_fixture ADD COLUMN away_team_color TEXT;")
         try execute("CREATE TABLE IF NOT EXISTS match_rule_snapshot (match_id TEXT PRIMARY KEY, half_duration_seconds INTEGER NOT NULL, extra_time_enabled INTEGER NOT NULL, penalty_shootout_enabled INTEGER NOT NULL, extra_time_half_duration_seconds INTEGER NOT NULL);")
         try execute("CREATE TABLE IF NOT EXISTS pitch_dimensions (match_id TEXT PRIMARY KEY, length_metres REAL NOT NULL, width_metres REAL NOT NULL);")
         try execute("CREATE TABLE IF NOT EXISTS participant_snapshot (id TEXT PRIMARY KEY, match_id TEXT NOT NULL, team_side TEXT, role TEXT NOT NULL, display_name TEXT NOT NULL, shirt_number INTEGER, UNIQUE(match_id, team_side, shirt_number), CHECK(team_side IS NULL OR team_side IN ('home', 'away')));")
@@ -85,11 +87,12 @@ public final class LedgerStore: @unchecked Sendable {
               fixture.homeTeamName != fixture.awayTeamName else {
             throw LedgerError.invalidDraft("fixture requires competition, venue, and distinct team names")
         }
-        let stmt = try prepare("INSERT INTO match_fixture VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET competition = excluded.competition, scheduled_at = excluded.scheduled_at, venue_name = excluded.venue_name, home_team_name = excluded.home_team_name, away_team_name = excluded.away_team_name")
+        let stmt = try prepare("INSERT INTO match_fixture VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET competition = excluded.competition, scheduled_at = excluded.scheduled_at, venue_name = excluded.venue_name, home_team_name = excluded.home_team_name, away_team_name = excluded.away_team_name, home_team_color = excluded.home_team_color, away_team_color = excluded.away_team_color")
         defer { sqlite3_finalize(stmt) }
         bind(stmt, 1, fixture.matchID.uuidString.lowercased()); bind(stmt, 2, fixture.competition)
         bind(stmt, 3, EventIntegrity.instant(fixture.scheduledAt)); bind(stmt, 4, fixture.venueName)
         bind(stmt, 5, fixture.homeTeamName); bind(stmt, 6, fixture.awayTeamName)
+        bind(stmt, 7, fixture.homeTeamColor); bind(stmt, 8, fixture.awayTeamColor)
         guard sqlite3_step(stmt) == SQLITE_DONE else { throw LedgerError.sqlite(lastError) }
     }
 
@@ -115,7 +118,7 @@ public final class LedgerStore: @unchecked Sendable {
     }
 
     public func fixture(matchID: UUID) throws -> MatchFixture? {
-        let stmt = try prepare("SELECT competition, scheduled_at, venue_name, home_team_name, away_team_name FROM match_fixture WHERE id = ?")
+        let stmt = try prepare("SELECT competition, scheduled_at, venue_name, home_team_name, away_team_name, home_team_color, away_team_color FROM match_fixture WHERE id = ?")
         defer { sqlite3_finalize(stmt) }
         bind(stmt, 1, matchID.uuidString.lowercased())
         guard sqlite3_step(stmt) == SQLITE_ROW,
@@ -124,7 +127,9 @@ public final class LedgerStore: @unchecked Sendable {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         guard let date = formatter.date(from: scheduled) else { return nil }
-        return MatchFixture(matchID: matchID, competition: competition, scheduledAt: date, venueName: venue, homeTeamName: home, awayTeamName: away)
+        return MatchFixture(matchID: matchID, competition: competition, scheduledAt: date, venueName: venue,
+                            homeTeamName: home, awayTeamName: away,
+                            homeTeamColor: columnText(stmt, 5), awayTeamColor: columnText(stmt, 6))
     }
 
     public func saveRules(_ rules: MatchRuleSnapshot, matchID: UUID) throws {
@@ -150,14 +155,16 @@ public final class LedgerStore: @unchecked Sendable {
     }
 
     public func fixtures() throws -> [MatchFixture] {
-        let stmt = try prepare("SELECT id, competition, scheduled_at, venue_name, home_team_name, away_team_name FROM match_fixture ORDER BY scheduled_at DESC")
+        let stmt = try prepare("SELECT id, competition, scheduled_at, venue_name, home_team_name, away_team_name, home_team_color, away_team_color FROM match_fixture ORDER BY scheduled_at DESC")
         defer { sqlite3_finalize(stmt) }
         var result: [MatchFixture] = []
         while sqlite3_step(stmt) == SQLITE_ROW,
               let id = columnText(stmt, 0).flatMap(UUID.init(uuidString:)),
               let competition = columnText(stmt, 1), let scheduled = columnText(stmt, 2).flatMap(date),
               let venue = columnText(stmt, 3), let home = columnText(stmt, 4), let away = columnText(stmt, 5) {
-            result.append(MatchFixture(matchID: id, competition: competition, scheduledAt: scheduled, venueName: venue, homeTeamName: home, awayTeamName: away))
+            result.append(MatchFixture(matchID: id, competition: competition, scheduledAt: scheduled, venueName: venue,
+                                       homeTeamName: home, awayTeamName: away,
+                                       homeTeamColor: columnText(stmt, 6), awayTeamColor: columnText(stmt, 7)))
         }
         return result
     }
@@ -1786,11 +1793,12 @@ public final class LedgerStore: @unchecked Sendable {
         return event
     }
     private func upsertFixture(_ fixture: MatchFixture) throws {
-        let stmt = try prepare("INSERT INTO match_fixture VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET competition = excluded.competition, scheduled_at = excluded.scheduled_at, venue_name = excluded.venue_name, home_team_name = excluded.home_team_name, away_team_name = excluded.away_team_name")
+        let stmt = try prepare("INSERT INTO match_fixture VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET competition = excluded.competition, scheduled_at = excluded.scheduled_at, venue_name = excluded.venue_name, home_team_name = excluded.home_team_name, away_team_name = excluded.away_team_name, home_team_color = excluded.home_team_color, away_team_color = excluded.away_team_color")
         defer { sqlite3_finalize(stmt) }
         bind(stmt, 1, fixture.matchID.uuidString.lowercased()); bind(stmt, 2, fixture.competition)
         bind(stmt, 3, EventIntegrity.instant(fixture.scheduledAt)); bind(stmt, 4, fixture.venueName)
         bind(stmt, 5, fixture.homeTeamName); bind(stmt, 6, fixture.awayTeamName)
+        bind(stmt, 7, fixture.homeTeamColor); bind(stmt, 8, fixture.awayTeamColor)
         guard sqlite3_step(stmt) == SQLITE_DONE else { throw LedgerError.sqlite(lastError) }
     }
     private func validate(draft: EventDraft, payload: String, originSequence: Int64? = nil) throws {

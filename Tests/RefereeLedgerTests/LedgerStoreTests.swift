@@ -46,6 +46,17 @@ struct LedgerStoreTests {
         #expect(try store.fixture(matchID: matchID) == fixture)
     }
 
+    @Test func teamKitColorsPersistAndTravelInWatchPackage() throws {
+        let store = try LedgerStore(originDeviceID: deviceID)
+        let fixture = MatchFixture(matchID: matchID, competition: "KFA League", scheduledAt: Date(timeIntervalSince1970: 1_700_000_000),
+                                   venueName: "Main pitch", homeTeamName: "Seoul", awayTeamName: "Busan",
+                                   homeTeamColor: "#E53935", awayTeamColor: "#1565C0")
+        try store.saveFixture(fixture)
+
+        #expect(try store.fixture(matchID: matchID) == fixture)
+        #expect(try store.matchPackage(matchID: matchID)?.fixture == fixture)
+    }
+
     @Test func incompletePreparationAndChecklistPersistAcrossRestart() throws {
         let path = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent("referee-setup-\(UUID().uuidString).sqlite").path

@@ -4,6 +4,15 @@ import RefereeLedger
 import PhotosUI
 import UniformTypeIdentifiers
 
+private extension Color {
+    init(hex: String) {
+        let value = UInt64(hex.dropFirst(hex.hasPrefix("#") ? 1 : 0), radix: 16) ?? 0x1565C0
+        self.init(red: Double((value >> 16) & 0xFF) / 255,
+                  green: Double((value >> 8) & 0xFF) / 255,
+                  blue: Double(value & 0xFF) / 255)
+    }
+}
+
 struct PlayerDraft: Identifiable, Equatable {
     let id: UUID
     var name: String
@@ -12,6 +21,19 @@ struct PlayerDraft: Identifiable, Equatable {
     init(id: UUID = UUID(), name: String = "", shirtNumber: Int = 1) {
         self.id = id; self.name = name; self.shirtNumber = shirtNumber
     }
+}
+
+private struct TeamKitPalette: Identifiable {
+    let id: String
+    let name: String
+    let color: Color
+    static let all: [TeamKitPalette] = [
+        .init(id: "#D32F2F", name: "Red", color: .red), .init(id: "#F57C00", name: "Orange", color: .orange),
+        .init(id: "#FBC02D", name: "Yellow", color: .yellow), .init(id: "#388E3C", name: "Green", color: .green),
+        .init(id: "#00838F", name: "Teal", color: .teal), .init(id: "#1565C0", name: "Blue", color: .blue),
+        .init(id: "#283593", name: "Navy", color: .indigo), .init(id: "#7B1FA2", name: "Purple", color: .purple),
+        .init(id: "#C2185B", name: "Pink", color: .pink), .init(id: "#212121", name: "Black", color: .black)
+    ]
 }
 
 @main
@@ -34,6 +56,8 @@ final class PhoneMatchStore: NSObject, ObservableObject, WCSessionDelegate {
     @Published var pitchWidthMetres = 68.0
     @Published var homeTeam = "Home"
     @Published var awayTeam = "Away"
+    @Published var homeTeamColor = "#D32F2F"
+    @Published var awayTeamColor = "#1565C0"
     @Published var scheduledAt = Date()
     @Published var extraTimeEnabled = false
     @Published var accountableReferee = ""
@@ -158,7 +182,8 @@ final class PhoneMatchStore: NSObject, ObservableObject, WCSessionDelegate {
         try ledger.saveFixture(MatchFixture(matchID: matchID, competition: competition.trimmingCharacters(in: .whitespacesAndNewlines),
                                             scheduledAt: scheduledAt, venueName: venue.trimmingCharacters(in: .whitespacesAndNewlines),
                                             homeTeamName: homeTeam.trimmingCharacters(in: .whitespacesAndNewlines),
-                                            awayTeamName: awayTeam.trimmingCharacters(in: .whitespacesAndNewlines)))
+                                            awayTeamName: awayTeam.trimmingCharacters(in: .whitespacesAndNewlines),
+                                            homeTeamColor: homeTeamColor, awayTeamColor: awayTeamColor))
         try ledger.saveRules(MatchRuleSnapshot(extraTimeEnabled: extraTimeEnabled), matchID: matchID)
         try ledger.savePitchDimensions(PitchDimensions(lengthMetres: pitchLengthMetres,
                                                        widthMetres: pitchWidthMetres), matchID: matchID)
@@ -193,6 +218,7 @@ final class PhoneMatchStore: NSObject, ObservableObject, WCSessionDelegate {
 
     func createMatch() {
         matchID = UUID(); competition = "Friendly"; venue = ""; homeTeam = ""; awayTeam = ""
+        homeTeamColor = "#D32F2F"; awayTeamColor = "#1565C0"
         pitchLengthMetres = 105; pitchWidthMetres = 68
         scheduledAt = Date(); extraTimeEnabled = false; homeScore = 0; awayScore = 0
         accountableReferee = ""; accountableRefereeID = UUID(); homePlayers = [PlayerDraft()]; awayPlayers = [PlayerDraft()]
@@ -224,6 +250,8 @@ final class PhoneMatchStore: NSObject, ObservableObject, WCSessionDelegate {
     private func load(_ fixture: MatchFixture, ledger: LedgerStore) {
         competition = fixture.competition; scheduledAt = fixture.scheduledAt; venue = fixture.venueName
         homeTeam = fixture.homeTeamName; awayTeam = fixture.awayTeamName
+        homeTeamColor = fixture.homeTeamColor ?? "#D32F2F"
+        awayTeamColor = fixture.awayTeamColor ?? "#1565C0"
         extraTimeEnabled = (try? ledger.rules(matchID: fixture.matchID).extraTimeEnabled) ?? false
         let pitch = try? ledger.pitchDimensions(matchID: fixture.matchID)
         pitchLengthMetres = pitch?.lengthMetres ?? 105
@@ -897,6 +925,18 @@ private struct PhoneSetupDetailsView: View {
         Form {
             if !startAtChecklist {
                 Section("Rules") { Toggle("Extra time", isOn: $match.extraTimeEnabled) }
+                Section("Team kit colors") {
+                    Picker("Home kit", selection: $match.homeTeamColor) {
+                        ForEach(TeamKitPalette.all) { option in
+                            Label(option.name, systemImage: "circle.fill").foregroundStyle(option.color).tag(option.id)
+                        }
+                    }
+                    Picker("Away kit", selection: $match.awayTeamColor) {
+                        ForEach(TeamKitPalette.all) { option in
+                            Label(option.name, systemImage: "circle.fill").foregroundStyle(option.color).tag(option.id)
+                        }
+                    }
+                }
                 Section("Pitch dimensions") {
                     HStack {
                         TextField("Length", value: $match.pitchLengthMetres, format: .number.precision(.fractionLength(0...1)))
@@ -985,9 +1025,9 @@ struct PhoneMatchControlView: View {
                 .padding(10).background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 Text(clock(elapsed)).font(.system(size: 64, weight: .bold, design: .rounded)).monospacedDigit()
                 HStack {
-                    score(team: match.homeTeam, score: match.homeScore)
+                    score(team: match.homeTeam, score: match.homeScore, color: Color(hex: match.homeTeamColor))
                     Text("–").font(.title)
-                    score(team: match.awayTeam, score: match.awayScore)
+                    score(team: match.awayTeam, score: match.awayScore, color: Color(hex: match.awayTeamColor))
                 }
                 .padding(14).background(.thinMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
                 if match.activePeriodID == nil {
@@ -1067,8 +1107,8 @@ struct PhoneMatchControlView: View {
         }
     }
 
-    private func score(team: String, score: Int) -> some View {
-        VStack { Text(team).lineLimit(1); Text("\(score)").font(.system(size: 48, weight: .bold, design: .rounded)) }
+    private func score(team: String, score: Int, color: Color) -> some View {
+        VStack { Text(team).lineLimit(1).foregroundStyle(color); Text("\(score)").font(.system(size: 48, weight: .bold, design: .rounded)).foregroundStyle(color) }
             .frame(maxWidth: .infinity)
     }
 

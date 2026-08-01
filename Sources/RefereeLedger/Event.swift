@@ -10,15 +10,20 @@ public struct MatchFixture: Codable, Equatable, Sendable {
     public let venueName: String
     public let homeTeamName: String
     public let awayTeamName: String
+    public let homeTeamColor: String?
+    public let awayTeamColor: String?
 
     public init(matchID: UUID, competition: String, scheduledAt: Date, venueName: String,
-                homeTeamName: String, awayTeamName: String) {
+                homeTeamName: String, awayTeamName: String,
+                homeTeamColor: String? = nil, awayTeamColor: String? = nil) {
         self.matchID = matchID
         self.competition = competition
         self.scheduledAt = scheduledAt
         self.venueName = venueName
         self.homeTeamName = homeTeamName
         self.awayTeamName = awayTeamName
+        self.homeTeamColor = homeTeamColor
+        self.awayTeamColor = awayTeamColor
     }
 }
 

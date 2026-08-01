@@ -3,6 +3,16 @@ import WatchKit
 import WatchConnectivity
 import RefereeLedger
 
+private extension Color {
+    init(hex: String?) {
+        let raw = hex ?? "#1565C0"
+        let value = UInt64(raw.dropFirst(raw.hasPrefix("#") ? 1 : 0), radix: 16) ?? 0x1565C0
+        self.init(red: Double((value >> 16) & 0xFF) / 255,
+                  green: Double((value >> 8) & 0xFF) / 255,
+                  blue: Double(value & 0xFF) / 255)
+    }
+}
+
 @main
 struct RefereeWatchApp: App {
     @StateObject private var match = WatchMatchStore()
@@ -24,6 +34,8 @@ final class WatchMatchStore: NSObject, ObservableObject, WCSessionDelegate {
     @Published private(set) var awayScore = 0
     @Published private(set) var homeTeamName = "HOME"
     @Published private(set) var awayTeamName = "AWAY"
+    @Published private(set) var homeTeamColor: String?
+    @Published private(set) var awayTeamColor: String?
     @Published private(set) var status = "Saving locally"
     @Published private(set) var saveConfirmation: String?
 
@@ -63,6 +75,8 @@ final class WatchMatchStore: NSObject, ObservableObject, WCSessionDelegate {
                 matchID = active; hasMatchPackage = true; periodLabel = package.projection.periodLabel
                 homeTeamName = package.fixture.homeTeamName
                 awayTeamName = package.fixture.awayTeamName
+                homeTeamColor = package.fixture.homeTeamColor
+                awayTeamColor = package.fixture.awayTeamColor
                 activePeriodID = package.projection.periodID
                 clockAnchor = package.projection.clockAnchor
                 clockAnchorMs = package.projection.clockAnchorMs
@@ -404,7 +418,11 @@ struct WatchMatchHomeView: View {
                         .foregroundStyle(match.syncFailure != nil ? Color.red : (match.pendingSyncCount == 0 ? Color.green : Color.orange))
                 }
                 Text(clock(elapsed, regulationDurationMs: match.regulationDurationMs)).font(.system(size: 36, weight: .bold, design: .rounded)).monospacedDigit()
-                Text("\(match.homeScore)  –  \(match.awayScore)").font(.title3.weight(.bold)).monospacedDigit()
+                HStack(spacing: 4) {
+                    Text("\(match.homeScore)").foregroundStyle(Color(hex: match.homeTeamColor))
+                    Text("–").foregroundStyle(.secondary)
+                    Text("\(match.awayScore)").foregroundStyle(Color(hex: match.awayTeamColor))
+                }.font(.title3.weight(.bold)).monospacedDigit()
                 if match.activePeriodID == nil {
                     Label(match.periodLabel == "FULL TIME" ? "Match complete" : "Hold to start", systemImage: "play.fill")
                         .font(.caption.weight(.semibold)).foregroundStyle(.green)
@@ -497,10 +515,10 @@ private struct GoalActionView: View {
             Section("Select scoring team") {
                 Button("\(match.homeTeamName) GOAL") { match.saveGoal(side: "home", matchClockMs: matchClockMs); dismiss() }
                     .accessibilityIdentifier("watch.goal.home")
-                    .tint(.green)
+                    .tint(Color(hex: match.homeTeamColor))
                 Button("\(match.awayTeamName) GOAL") { match.saveGoal(side: "away", matchClockMs: matchClockMs); dismiss() }
                     .accessibilityIdentifier("watch.goal.away")
-                    .tint(.green)
+                    .tint(Color(hex: match.awayTeamColor))
             }
         }
         .navigationTitle("Goal")
